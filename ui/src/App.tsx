@@ -8,7 +8,7 @@ function App() {
   return (
     <ErrorBoundary>
       <JudgeProvider>
-        <Router>
+        <Router basename="/family-olympics">
           <Routes>
           <Route
             path="/"

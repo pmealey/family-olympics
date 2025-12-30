@@ -5,10 +5,10 @@ import { useCurrentOlympics, useTeams, useScores, useEvents } from '../hooks/use
 import { calculateStandings, getMedalEmoji, formatPoints, getCompletedEventsCount } from '../lib/standings';
 
 export const Home: React.FC = () => {
-  const { data: olympics, loading: olympicsLoading, error: olympicsError, refetch: refetchOlympics } = useCurrentOlympics();
-  const { data: teamsData, loading: teamsLoading, refetch: refetchTeams } = useTeams(olympics?.year || null);
-  const { data: scoresData, loading: scoresLoading, refetch: refetchScores } = useScores(olympics?.year || null);
-  const { data: eventsData, loading: eventsLoading, refetch: refetchEvents } = useEvents(olympics?.year || null);
+  const { data: olympics, loading: olympicsLoading, error: olympicsError, execute: refetchOlympics } = useCurrentOlympics();
+  const { data: teamsData, loading: teamsLoading, execute: refetchTeams } = useTeams(olympics?.year || null);
+  const { data: scoresData, loading: scoresLoading, execute: refetchScores } = useScores(olympics?.year || null);
+  const { data: eventsData, loading: eventsLoading, execute: refetchEvents } = useEvents(olympics?.year || null);
 
   const teams = teamsData?.teams || [];
   const scores = scoresData?.scores || [];

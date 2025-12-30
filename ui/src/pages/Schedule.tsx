@@ -4,8 +4,8 @@ import { useCurrentOlympics, useEvents } from '../hooks/useApi';
 import type { Event } from '../lib/api';
 
 export const Schedule: React.FC = () => {
-  const { data: olympics, loading: olympicsLoading, error: olympicsError, refetch: refetchOlympics } = useCurrentOlympics();
-  const { data: eventsData, loading: eventsLoading, error: eventsError, refetch: refetchEvents } = useEvents(olympics?.year || null);
+  const { data: olympics, loading: olympicsLoading, error: olympicsError, execute: refetchOlympics } = useCurrentOlympics();
+  const { data: eventsData, loading: eventsLoading, error: eventsError, execute: refetchEvents } = useEvents(olympics?.year || null);
 
   const events = eventsData?.events || [];
 

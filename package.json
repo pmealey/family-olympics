@@ -9,7 +9,8 @@
     "watch": "tsc -w",
     "test": "jest --config jest.config.backend.js",
     "test:watch": "jest --config jest.config.backend.js --watch",
-    "cdk": "cdk"
+    "cdk": "cdk",
+    "deploy": "npm run build && npm run build --prefix ui && npx cdk deploy"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.159",

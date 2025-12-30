@@ -364,18 +364,18 @@ export class FamilyOlympicsStack extends cdk.Stack {
         compress: true,
         responseHeadersPolicy,
       },
-      defaultRootObject: 'index.html',
+      defaultRootObject: 'family-olympics/index.html',
       errorResponses: [
         {
           httpStatus: 404,
           responseHttpStatus: 200,
-          responsePagePath: '/index.html',
+          responsePagePath: '/family-olympics/index.html',
           ttl: cdk.Duration.minutes(5),
         },
         {
           httpStatus: 403,
           responseHttpStatus: 200,
-          responsePagePath: '/index.html',
+          responsePagePath: '/family-olympics/index.html',
           ttl: cdk.Duration.minutes(5),
         },
       ],
@@ -383,10 +383,11 @@ export class FamilyOlympicsStack extends cdk.Stack {
       comment: 'Family Olympics Website Distribution',
     });
 
-    // Deploy website files to S3
+    // Deploy website files to S3 with family-olympics prefix
     new s3deploy.BucketDeployment(this, 'DeployWebsite', {
       sources: [s3deploy.Source.asset(join(__dirname, '../ui/dist'))],
       destinationBucket: websiteBucket,
+      destinationKeyPrefix: 'family-olympics/',
       distribution,
       distributionPaths: ['/*'],
     });
