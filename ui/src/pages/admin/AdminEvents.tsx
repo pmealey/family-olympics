@@ -173,16 +173,14 @@ export const AdminEvents: React.FC = () => {
     return acc;
   }, {} as Record<number, Event[]>);
 
-  // Sort events within each day by display order and time
+  // Sort events within each day by scheduledTime
   Object.keys(eventsByDay).forEach(day => {
     eventsByDay[Number(day)].sort((a, b) => {
-      if (a.displayOrder !== undefined && b.displayOrder !== undefined) {
-        return a.displayOrder - b.displayOrder;
-      }
-      if (a.scheduledTime && b.scheduledTime) {
-        return a.scheduledTime.localeCompare(b.scheduledTime);
-      }
-      return 0;
+      // Events without time go to the end
+      if (!a.scheduledTime && !b.scheduledTime) return 0;
+      if (!a.scheduledTime) return 1;
+      if (!b.scheduledTime) return -1;
+      return a.scheduledTime.localeCompare(b.scheduledTime);
     });
   });
 

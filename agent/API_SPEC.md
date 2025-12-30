@@ -244,8 +244,7 @@ Get all events for a year.
         "scoringType": "placement",
         "scheduledDay": 1,
         "scheduledTime": "2025-02-15T10:00:00Z",
-        "status": "upcoming",
-        "displayOrder": 1
+        "status": "upcoming"
       },
       {
         "eventId": "event-def456",
@@ -256,8 +255,7 @@ Get all events for a year.
         "judgedCategories": ["Creativity", "Execution", "Style"],
         "scheduledDay": 2,
         "scheduledTime": "2025-02-16T14:00:00Z",
-        "status": "upcoming",
-        "displayOrder": 2
+        "status": "upcoming"
       }
     ]
   }
@@ -279,8 +277,7 @@ Get a specific event.
     "scoringType": "placement",
     "scheduledDay": 1,
     "scheduledTime": "2025-02-15T10:00:00Z",
-    "status": "upcoming",
-    "displayOrder": 1
+    "status": "upcoming"
   }
 }
 ```

@@ -126,7 +126,7 @@ useCurrentOlympics() → Olympics config
 useEvents() → Events list
 ↓
 Group by scheduledDay
-Sort by displayOrder and time
+Sort by scheduledTime
 ↓
 Render EventCard for each event
 ```

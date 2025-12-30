@@ -12,7 +12,6 @@ interface UpdateEventRequest {
   scheduledDay?: number;
   scheduledTime?: string;
   status?: 'upcoming' | 'in-progress' | 'completed';
-  displayOrder?: number;
 }
 
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
@@ -119,11 +118,6 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       updates.push('#status = :status');
       attributeValues[':status'] = body.status;
       attributeNames['#status'] = 'status';
-    }
-
-    if (body.displayOrder !== undefined) {
-      updates.push('displayOrder = :displayOrder');
-      attributeValues[':displayOrder'] = body.displayOrder;
     }
 
     updates.push('updatedAt = :now');

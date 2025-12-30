@@ -74,7 +74,6 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       scheduledDay: scheduledDay || null,
       scheduledTime: scheduledTime || null,
       status: 'upcoming',
-      displayOrder: 0,
       createdAt: now,
       updatedAt: now,
     };

@@ -113,9 +113,8 @@ Attributes:
 - judgedCategories: List<String> - only if scoringType is "judged"
     e.g., ["Creativity", "Execution", "Style"]
 - scheduledDay: Number - 1 or 2
-- scheduledTime: String - ISO timestamp or time string
+- scheduledTime: String - ISO timestamp or time string (used for sorting)
 - status: String - "upcoming" | "in-progress" | "completed"
-- displayOrder: Number - for ordering within a day
 - createdAt: String (ISO timestamp)
 - updatedAt: String (ISO timestamp)
 ```
@@ -132,7 +131,6 @@ Attributes:
   "scheduledDay": 1,
   "scheduledTime": "2025-02-15T10:00:00Z",
   "status": "upcoming",
-  "displayOrder": 1,
   "createdAt": "2025-01-15T10:00:00Z",
   "updatedAt": "2025-01-15T10:00:00Z"
 }
@@ -151,7 +149,6 @@ Attributes:
   "scheduledDay": 2,
   "scheduledTime": "2025-02-16T14:00:00Z",
   "status": "upcoming",
-  "displayOrder": 2,
   "createdAt": "2025-01-15T10:00:00Z",
   "updatedAt": "2025-01-15T10:00:00Z"
 }

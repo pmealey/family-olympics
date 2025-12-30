@@ -25,7 +25,7 @@ describe('Events List Handler', () => {
         location: 'Park',
         scoringType: 'placement',
         status: 'upcoming',
-        displayOrder: 1,
+        scheduledTime: '10:00',
       },
       {
         year: 2025,
@@ -34,7 +34,7 @@ describe('Events List Handler', () => {
         location: 'Stadium',
         scoringType: 'judged',
         status: 'completed',
-        displayOrder: 2,
+        scheduledTime: '14:00',
       },
     ];
 
@@ -65,14 +65,14 @@ describe('Events List Handler', () => {
         eventId: 'event-1',
         name: 'Event Alpha',
         scheduledDay: 1,
-        displayOrder: 1,
+        scheduledTime: '10:00',
       },
       {
         year: 2025,
         eventId: 'event-2',
         name: 'Event Beta',
         scheduledDay: 2,
-        displayOrder: 2,
+        scheduledTime: '14:00',
       },
     ];
 
@@ -101,14 +101,14 @@ describe('Events List Handler', () => {
         eventId: 'event-1',
         name: 'Event Alpha',
         status: 'upcoming',
-        displayOrder: 1,
+        scheduledTime: '10:00',
       },
       {
         year: 2025,
         eventId: 'event-2',
         name: 'Event Beta',
         status: 'completed',
-        displayOrder: 2,
+        scheduledTime: '14:00',
       },
     ];
 

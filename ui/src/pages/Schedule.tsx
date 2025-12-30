@@ -9,7 +9,7 @@ export const Schedule: React.FC = () => {
 
   const events = eventsData?.events || [];
 
-  // Group events by day and sort by displayOrder and time
+  // Group events by day and sort by time
   const eventsByDay = useMemo(() => {
     const grouped: Record<number, Event[]> = {
       1: [],
@@ -23,21 +23,15 @@ export const Schedule: React.FC = () => {
       }
     });
 
-    // Sort events within each day by displayOrder, then by time
+    // Sort events within each day by scheduledTime
     Object.keys(grouped).forEach((dayKey) => {
       const day = parseInt(dayKey);
       grouped[day].sort((a, b) => {
-        // First sort by displayOrder if available
-        if (a.displayOrder !== undefined && b.displayOrder !== undefined) {
-          if (a.displayOrder !== b.displayOrder) {
-            return a.displayOrder - b.displayOrder;
-          }
-        }
-        // Then by time
-        if (a.scheduledTime && b.scheduledTime) {
-          return new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime();
-        }
-        return 0;
+        // Events without time go to the end
+        if (!a.scheduledTime && !b.scheduledTime) return 0;
+        if (!a.scheduledTime) return 1;
+        if (!b.scheduledTime) return -1;
+        return a.scheduledTime.localeCompare(b.scheduledTime);
       });
     });
 

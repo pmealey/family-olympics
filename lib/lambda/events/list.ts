@@ -41,8 +41,14 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       events = events.filter((e) => e.status === status);
     }
 
-    // Sort by displayOrder
-    events.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+    // Sort by scheduledTime
+    events.sort((a, b) => {
+      // Events without time go to the end
+      if (!a.scheduledTime && !b.scheduledTime) return 0;
+      if (!a.scheduledTime) return 1;
+      if (!b.scheduledTime) return -1;
+      return a.scheduledTime.localeCompare(b.scheduledTime);
+    });
 
     return successResponse({ events });
   } catch (error) {

@@ -43,7 +43,6 @@ export interface Event {
   scheduledDay?: number;
   scheduledTime?: string;
   status: 'upcoming' | 'in-progress' | 'completed';
-  displayOrder?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -251,7 +250,6 @@ class ApiClient {
       scheduledDay?: number;
       scheduledTime?: string;
       status?: 'upcoming' | 'in-progress' | 'completed';
-      displayOrder?: number;
     }
   ) {
     return this.request<Event>(`/olympics/${year}/events/${eventId}`, {
