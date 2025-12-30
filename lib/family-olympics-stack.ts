@@ -4,6 +4,10 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
+import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
+import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import { join } from 'path';
 
 export class FamilyOlympicsStack extends cdk.Stack {
@@ -299,12 +303,116 @@ export class FamilyOlympicsStack extends cdk.Stack {
     score.addMethod('DELETE', new apigateway.LambdaIntegration(deleteScoreHandler));
 
     // ============================================
+    // S3 Bucket for Frontend Hosting
+    // ============================================
+
+    const websiteBucket = new s3.Bucket(this, 'WebsiteBucket', {
+      bucketName: `family-olympics-website-${this.account}`,
+      websiteIndexDocument: 'index.html',
+      websiteErrorDocument: 'index.html', // SPA routing
+      publicReadAccess: false, // CloudFront will access via OAI
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      autoDeleteObjects: false,
+    });
+
+    // ============================================
+    // CloudFront Distribution
+    // ============================================
+
+    // Origin Access Identity for S3
+    const originAccessIdentity = new cloudfront.OriginAccessIdentity(this, 'OAI', {
+      comment: 'OAI for Family Olympics website',
+    });
+
+    websiteBucket.grantRead(originAccessIdentity);
+
+    // Custom response headers policy for SEO prevention
+    const responseHeadersPolicy = new cloudfront.ResponseHeadersPolicy(this, 'SecurityHeadersPolicy', {
+      responseHeadersPolicyName: 'FamilyOlympicsSecurityHeaders',
+      comment: 'Security headers including X-Robots-Tag',
+      customHeadersBehavior: {
+        customHeaders: [
+          {
+            header: 'X-Robots-Tag',
+            value: 'noindex, nofollow, noarchive, nosnippet',
+            override: true,
+          },
+        ],
+      },
+      securityHeadersBehavior: {
+        contentTypeOptions: { override: true },
+        frameOptions: { frameOption: cloudfront.HeadersFrameOption.DENY, override: true },
+        referrerPolicy: { referrerPolicy: cloudfront.HeadersReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN, override: true },
+        strictTransportSecurity: {
+          accessControlMaxAge: cdk.Duration.seconds(31536000),
+          includeSubdomains: true,
+          override: true,
+        },
+        xssProtection: { protection: true, modeBlock: true, override: true },
+      },
+    });
+
+    const distribution = new cloudfront.Distribution(this, 'WebsiteDistribution', {
+      defaultBehavior: {
+        origin: origins.S3BucketOrigin.withOriginAccessIdentity(websiteBucket, {
+          originAccessIdentity,
+        }),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+        cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
+        compress: true,
+        responseHeadersPolicy,
+      },
+      defaultRootObject: 'index.html',
+      errorResponses: [
+        {
+          httpStatus: 404,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html',
+          ttl: cdk.Duration.minutes(5),
+        },
+        {
+          httpStatus: 403,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html',
+          ttl: cdk.Duration.minutes(5),
+        },
+      ],
+      priceClass: cloudfront.PriceClass.PRICE_CLASS_100, // Use only North America and Europe
+      comment: 'Family Olympics Website Distribution',
+    });
+
+    // Deploy website files to S3
+    new s3deploy.BucketDeployment(this, 'DeployWebsite', {
+      sources: [s3deploy.Source.asset(join(__dirname, '../ui/dist'))],
+      destinationBucket: websiteBucket,
+      distribution,
+      distributionPaths: ['/*'],
+    });
+
+    // ============================================
     // Outputs
     // ============================================
 
     new cdk.CfnOutput(this, 'ApiUrl', {
       value: api.url,
       description: 'API Gateway URL',
+    });
+
+    new cdk.CfnOutput(this, 'WebsiteUrl', {
+      value: `https://${distribution.distributionDomainName}`,
+      description: 'CloudFront Website URL',
+    });
+
+    new cdk.CfnOutput(this, 'DistributionId', {
+      value: distribution.distributionId,
+      description: 'CloudFront Distribution ID',
+    });
+
+    new cdk.CfnOutput(this, 'WebsiteBucketName', {
+      value: websiteBucket.bucketName,
+      description: 'S3 Website Bucket Name',
     });
   }
 }

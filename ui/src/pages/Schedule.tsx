@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
-import { EventCard, Loading, Card, CardBody } from '../components';
+import { EventCard, Loading, Card, CardBody, PageTransition, EmptyState, ErrorMessage, RefreshButton } from '../components';
 import { useCurrentOlympics, useEvents } from '../hooks/useApi';
 import type { Event } from '../lib/api';
 
 export const Schedule: React.FC = () => {
-  const { data: olympics, loading: olympicsLoading, error: olympicsError } = useCurrentOlympics();
-  const { data: eventsData, loading: eventsLoading, error: eventsError } = useEvents(olympics?.year || null);
+  const { data: olympics, loading: olympicsLoading, error: olympicsError, refetch: refetchOlympics } = useCurrentOlympics();
+  const { data: eventsData, loading: eventsLoading, error: eventsError, refetch: refetchEvents } = useEvents(olympics?.year || null);
 
   const events = eventsData?.events || [];
 
@@ -54,27 +54,32 @@ export const Schedule: React.FC = () => {
   const isLoading = olympicsLoading || eventsLoading;
   const error = olympicsError || eventsError;
 
+  const handleRefresh = async () => {
+    await Promise.all([refetchOlympics(), refetchEvents()]);
+  };
+
   // Error state
   if (error) {
     return (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-display font-bold">Schedule</h2>
-        <Card>
-          <CardBody>
-            <div className="text-center py-8">
-              <p className="text-red-600 mb-4">Failed to load schedule</p>
-              <p className="text-winter-gray text-sm">{error}</p>
-            </div>
-          </CardBody>
-        </Card>
-      </div>
+      <PageTransition>
+        <div className="space-y-6">
+          <h2 className="text-2xl font-display font-bold">Schedule</h2>
+          <ErrorMessage
+            title="Failed to load schedule"
+            message={error}
+            onRetry={handleRefresh}
+          />
+        </div>
+      </PageTransition>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <PageTransition>
+      <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-display font-bold">Schedule</h2>
+        <RefreshButton onRefresh={handleRefresh} />
       </div>
 
       {isLoading ? (
@@ -82,14 +87,11 @@ export const Schedule: React.FC = () => {
           <Loading />
         </div>
       ) : events.length === 0 ? (
-        <Card>
-          <CardBody>
-            <div className="text-center py-8 text-winter-gray">
-              <p>No events scheduled yet</p>
-              <p className="text-sm mt-2">Check back soon!</p>
-            </div>
-          </CardBody>
-        </Card>
+        <EmptyState
+          icon="📅"
+          title="No events scheduled yet"
+          description="Check back soon! Events will appear here once they're added."
+        />
       ) : (
         <>
           {/* Day 1 */}
@@ -137,6 +139,7 @@ export const Schedule: React.FC = () => {
           </div>
         </>
       )}
-    </div>
+      </div>
+    </PageTransition>
   );
 };

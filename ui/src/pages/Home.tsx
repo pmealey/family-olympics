@@ -1,14 +1,14 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Button, Card, CardBody, Logo, TeamColorIndicator, Loading } from '../components';
+import { Button, Card, CardBody, Logo, TeamColorIndicator, Loading, PageTransition, RefreshButton } from '../components';
 import { useCurrentOlympics, useTeams, useScores, useEvents } from '../hooks/useApi';
 import { calculateStandings, getMedalEmoji, formatPoints, getCompletedEventsCount } from '../lib/standings';
 
 export const Home: React.FC = () => {
-  const { data: olympics, loading: olympicsLoading, error: olympicsError } = useCurrentOlympics();
-  const { data: teamsData, loading: teamsLoading } = useTeams(olympics?.year || null);
-  const { data: scoresData, loading: scoresLoading } = useScores(olympics?.year || null);
-  const { data: eventsData, loading: eventsLoading } = useEvents(olympics?.year || null);
+  const { data: olympics, loading: olympicsLoading, error: olympicsError, refetch: refetchOlympics } = useCurrentOlympics();
+  const { data: teamsData, loading: teamsLoading, refetch: refetchTeams } = useTeams(olympics?.year || null);
+  const { data: scoresData, loading: scoresLoading, refetch: refetchScores } = useScores(olympics?.year || null);
+  const { data: eventsData, loading: eventsLoading, refetch: refetchEvents } = useEvents(olympics?.year || null);
 
   const teams = teamsData?.teams || [];
   const scores = scoresData?.scores || [];
@@ -25,6 +25,15 @@ export const Home: React.FC = () => {
   }, [scores]);
 
   const isLoading = olympicsLoading || teamsLoading || scoresLoading || eventsLoading;
+
+  const handleRefresh = async () => {
+    await Promise.all([
+      refetchOlympics(),
+      refetchTeams(),
+      refetchScores(),
+      refetchEvents(),
+    ]);
+  };
 
   // Error state
   if (olympicsError) {
@@ -43,7 +52,8 @@ export const Home: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <PageTransition>
+      <div className="space-y-6">
       {/* Logo and Title */}
       <div className="bg-white rounded-lg shadow-md p-8 text-center">
         <Logo size="lg" className="mx-auto mb-4" />
@@ -62,9 +72,12 @@ export const Home: React.FC = () => {
       {/* Current Standings */}
       <Card>
         <CardBody>
-          <h3 className="text-xl font-display font-bold mb-4">
-            Current Standings
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-display font-bold">
+              Current Standings
+            </h3>
+            <RefreshButton onRefresh={handleRefresh} />
+          </div>
           
           {isLoading ? (
             <div className="py-8">
@@ -107,7 +120,8 @@ export const Home: React.FC = () => {
           )}
         </CardBody>
       </Card>
-    </div>
+      </div>
+    </PageTransition>
   );
 };
 

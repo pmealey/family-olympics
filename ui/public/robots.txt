@@ -1,0 +1,25 @@
+# Family Olympics - Private Event Website
+# This site is not intended for public indexing
+
+User-agent: *
+Disallow: /
+
+# Disallow all search engines
+User-agent: Googlebot
+Disallow: /
+
+User-agent: Bingbot
+Disallow: /
+
+User-agent: Slurp
+Disallow: /
+
+User-agent: DuckDuckBot
+Disallow: /
+
+User-agent: Baiduspider
+Disallow: /
+
+User-agent: YandexBot
+Disallow: /
+

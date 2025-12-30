@@ -2,12 +2,14 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { JudgeProvider } from './contexts';
 import { PublicLayout } from './layouts';
 import { Home, Schedule, EventDetail, Judge, JudgeEvents, JudgeScoreEntry, Admin } from './pages';
+import { ErrorBoundary } from './components';
 
 function App() {
   return (
-    <JudgeProvider>
-      <Router>
-        <Routes>
+    <ErrorBoundary>
+      <JudgeProvider>
+        <Router>
+          <Routes>
           <Route
             path="/"
             element={
@@ -61,8 +63,9 @@ function App() {
             element={<Admin />}
           />
         </Routes>
-      </Router>
-    </JudgeProvider>
+        </Router>
+      </JudgeProvider>
+    </ErrorBoundary>
   );
 }
 
