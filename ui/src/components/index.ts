@@ -7,4 +7,5 @@ export { Loading, Skeleton } from './Loading';
 export { TeamColorIndicator } from './TeamColorIndicator';
 export { Logo } from './Logo';
 export { EventCard } from './EventCard';
+export { ScoreInput } from './ScoreInput';
 

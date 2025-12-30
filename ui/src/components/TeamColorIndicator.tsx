@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface TeamColorIndicatorProps {
-  color: 'green' | 'pink' | 'yellow' | 'orange';
+  color?: 'green' | 'pink' | 'yellow' | 'orange';
   size?: 'sm' | 'md' | 'lg';
   className?: string;
 }
@@ -23,6 +23,10 @@ export const TeamColorIndicator: React.FC<TeamColorIndicatorProps> = ({
     md: 'w-12 h-6',
     lg: 'w-16 h-8',
   };
+  
+  if (!color) {
+    return null;
+  }
   
   return (
     <div 
