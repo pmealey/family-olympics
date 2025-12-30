@@ -55,7 +55,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
         {/* Tab Navigation */}
         <nav className="bg-white border-b border-winter-gray/20 sticky top-0 z-10 shadow-sm">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-4 py-0">
             <div className="flex space-x-1 overflow-x-auto">
               {tabs.map((tab) => (
                 <button
@@ -63,7 +63,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`
                     px-6 py-3 font-medium text-sm whitespace-nowrap transition-colors
-                    border-b-2 -mb-px
+                    border-b-2
                     ${
                       activeTab === tab.id
                         ? 'border-winter-blue text-winter-blue'
