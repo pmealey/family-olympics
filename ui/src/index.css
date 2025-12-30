@@ -1,11 +1,37 @@
+@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@theme {
+  /* Winter theme colors */
+  --color-ice-blue: #f0f7ff;
+  --color-winter-dark: #1a2b3c;
+  --color-winter-gray: #5a6b7c;
+  --color-winter-accent: #3b82f6;
+  --color-winter-accent-light: #93c5fd;
+  --color-winter-accent-dark: #1d4ed8;
+  
+  /* Team colors */
+  --color-team-green: #22c55e;
+  --color-team-green-light: #86efac;
+  --color-team-green-dark: #15803d;
+  --color-team-pink: #ec4899;
+  --color-team-pink-light: #f9a8d4;
+  --color-team-pink-dark: #be185d;
+  --color-team-yellow: #eab308;
+  --color-team-yellow-light: #fde047;
+  --color-team-yellow-dark: #a16207;
+  --color-team-orange: #f97316;
+  --color-team-orange-light: #fdba74;
+  --color-team-orange-dark: #c2410c;
+  
+  /* Font families */
+  --font-family-display: 'Outfit', sans-serif;
+  --font-family-body: 'Inter', sans-serif;
+  --font-family-mono: 'JetBrains Mono', monospace;
+}
 
 :root {
-  /* Base - Winter Blues & Whites */
+  /* Legacy custom properties for backwards compatibility */
   --color-bg-primary: #f0f7ff;
   --color-bg-secondary: #ffffff;
   --color-bg-dark: #1a2b3c;
