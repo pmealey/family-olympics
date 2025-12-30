@@ -86,17 +86,15 @@ A mobile-first website for the Family Olympics, a bi-yearly winter event in Verm
 
 ### Step 2.1: Admin Access
 
-**Goal:** Simple password gate for admin interface.
+**Goal:** Simple admin interface (password protection moved to Phase 7 - Optional).
 
 **Tasks:**
-- [ ] Create password entry screen
-- [ ] Store successful auth in local storage
-- [ ] Redirect to admin dashboard on success
 - [ ] Admin layout with navigation tabs
+- [ ] Direct access to admin dashboard
 
 **Deliverables:**
-- Password-protected admin access
-- Persistent auth via local storage
+- Admin interface layout
+- Navigation structure
 
 ### Step 2.2: Olympics Configuration
 
@@ -353,6 +351,26 @@ A mobile-first website for the Family Olympics, a bi-yearly winter event in Verm
 - [ ] Photo gallery per event
 - [ ] Simple lightbox viewer
 - [ ] Photo deletion (admin only)
+
+---
+
+## Phase 7: Optional - Password Protection
+
+*Nice-to-have feature for future enhancement.*
+
+### Step 7.1: Admin Password Implementation
+
+**Tasks:**
+- [ ] Add password hashing (bcryptjs or similar)
+- [ ] Store password hash in Olympics table
+- [ ] Create password entry screen
+- [ ] Validate password on login
+- [ ] Store auth token in local storage
+- [ ] Protect admin routes
+
+**Deliverables:**
+- Password-protected admin access
+- Secure authentication flow
 
 ---
 
