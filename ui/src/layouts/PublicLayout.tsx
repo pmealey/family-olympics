@@ -31,7 +31,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
         <div className="flex justify-around items-center h-16">
           <Link
             to="/"
-            className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
+            className={`flex flex-col items-center justify-center flex-1 h-full transition-colors cursor-pointer ${
               isActive('/') 
                 ? 'text-winter-accent' 
                 : 'text-winter-gray hover:text-winter-accent'
@@ -43,7 +43,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
           
           <Link
             to="/schedule"
-            className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
+            className={`flex flex-col items-center justify-center flex-1 h-full transition-colors cursor-pointer ${
               isActive('/schedule') 
                 ? 'text-winter-accent' 
                 : 'text-winter-gray hover:text-winter-accent'
@@ -55,7 +55,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
           
           <Link
             to="/judge"
-            className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
+            className={`flex flex-col items-center justify-center flex-1 h-full transition-colors cursor-pointer ${
               isActive('/judge') 
                 ? 'text-winter-accent' 
                 : 'text-winter-gray hover:text-winter-accent'
@@ -67,7 +67,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
           
           <Link
             to="/admin"
-            className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
+            className={`flex flex-col items-center justify-center flex-1 h-full transition-colors cursor-pointer ${
               isActive('/admin') 
                 ? 'text-winter-accent' 
                 : 'text-winter-gray hover:text-winter-accent'

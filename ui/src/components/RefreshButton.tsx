@@ -24,7 +24,7 @@ export const RefreshButton: React.FC<RefreshButtonProps> = ({ onRefresh, classNa
     <button
       onClick={handleRefresh}
       disabled={isRefreshing}
-      className={`touch-target touch-feedback p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors disabled:opacity-50 ${className}`}
+      className={`touch-target touch-feedback p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed ${className}`}
       aria-label="Refresh"
     >
       <svg

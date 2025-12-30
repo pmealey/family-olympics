@@ -81,7 +81,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                   key={tab.id}
                   onClick={() => handleTabClick(tab.id)}
                   className={`
-                    px-6 py-3 font-medium text-sm whitespace-nowrap transition-colors
+                    px-6 py-3 font-medium text-sm whitespace-nowrap transition-colors cursor-pointer
                     border-b-2
                     ${
                       activeTab === tab.id
