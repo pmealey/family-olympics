@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '../components';
 
 interface AdminLayoutProps {
@@ -25,7 +25,21 @@ export function useAdminLayout() {
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<AdminTab>('olympics');
+
+  // Sync activeTab with URL on mount and location changes
+  useEffect(() => {
+    const path = location.pathname.split('/admin/')[1] || '';
+    const tabFromUrl = path.split('/')[0] as AdminTab;
+    
+    if (tabFromUrl && ['olympics', 'teams', 'events', 'scores'].includes(tabFromUrl)) {
+      setActiveTab(tabFromUrl);
+    } else {
+      // Default to olympics if no valid tab in URL
+      setActiveTab('olympics');
+    }
+  }, [location.pathname]);
   
   const handleExit = () => {
     navigate('/');
@@ -37,6 +51,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { id: 'events', label: 'Events' },
     { id: 'scores', label: 'Scores' },
   ];
+
+  const handleTabClick = (tab: AdminTab) => {
+    setActiveTab(tab);
+    navigate(`/admin/${tab}`);
+  };
   
   return (
     <AdminLayoutContext.Provider value={{ activeTab, setActiveTab }}>
@@ -60,7 +79,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabClick(tab.id)}
                   className={`
                     px-6 py-3 font-medium text-sm whitespace-nowrap transition-colors
                     border-b-2
