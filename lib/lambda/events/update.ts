@@ -61,15 +61,18 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const attributeValues: Record<string, any> = {
       ':now': new Date().toISOString(),
     };
+    const attributeNames: Record<string, string> = {};
 
     if (body.name !== undefined) {
-      updates.push('name = :name');
+      updates.push('#name = :name');
       attributeValues[':name'] = body.name;
+      attributeNames['#name'] = 'name';
     }
 
     if (body.location !== undefined) {
-      updates.push('location = :location');
+      updates.push('#location = :location');
       attributeValues[':location'] = body.location;
+      attributeNames['#location'] = 'location';
     }
 
     if (body.rulesUrl !== undefined) {
@@ -115,6 +118,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       }
       updates.push('#status = :status');
       attributeValues[':status'] = body.status;
+      attributeNames['#status'] = 'status';
     }
 
     if (body.displayOrder !== undefined) {
@@ -125,7 +129,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     updates.push('updatedAt = :now');
 
     const updateExpression = `SET ${updates.join(', ')}`;
-    const expressionAttributeNames = body.status !== undefined ? { '#status': 'status' } : undefined;
+    const expressionAttributeNames = Object.keys(attributeNames).length > 0 ? attributeNames : undefined;
 
     const result = await docClient.send(
       new UpdateCommand({

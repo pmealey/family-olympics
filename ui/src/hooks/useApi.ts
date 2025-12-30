@@ -2,7 +2,7 @@
  * Custom hooks for API calls
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { apiClient } from '../lib/api';
 import type { ApiResponse } from '../lib/api';
 
@@ -13,13 +13,19 @@ export function useAsync<T>(
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const asyncFunctionRef = useRef(asyncFunction);
+
+  // Update ref when function changes
+  useEffect(() => {
+    asyncFunctionRef.current = asyncFunction;
+  }, [asyncFunction]);
 
   const execute = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await asyncFunction();
+      const response = await asyncFunctionRef.current();
       if (response.success && response.data) {
         setData(response.data);
       } else if (response.error) {
@@ -30,7 +36,7 @@ export function useAsync<T>(
     } finally {
       setLoading(false);
     }
-  }, [asyncFunction]);
+  }, []);
 
   useEffect(() => {
     if (immediate) {
