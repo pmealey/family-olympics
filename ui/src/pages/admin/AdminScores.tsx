@@ -252,7 +252,7 @@ export const AdminScores: React.FC = () => {
                         <div key={score.scoreId} className="flex items-center justify-between p-3 bg-ice-blue rounded">
                           <div className="flex items-center gap-3">
                             <span className="font-bold text-winter-blue">
-                              {score.place === 1 ? '🥇' : score.place === 2 ? '🥈' : score.place === 3 ? '🥉' : `${score.place}th`}
+                              {score.place === 1 ? '🥇' : score.place === 2 ? '🥈' : score.place === 3 ? '🥉' : score.place === 4 ? '🏅' : `${score.place}th`}
                             </span>
                             {team && <TeamColorIndicator color={team.color} />}
                             <span className="font-medium">{team?.name}</span>

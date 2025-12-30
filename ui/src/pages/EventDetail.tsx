@@ -78,6 +78,8 @@ export const EventDetail: React.FC = () => {
         return '🥈';
       case 3:
         return '🥉';
+      case 4:
+        return '🏅';
       default:
         return '';
     }

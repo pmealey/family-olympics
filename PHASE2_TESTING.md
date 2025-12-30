@@ -98,7 +98,7 @@ Create 3-4 teams with different colors to test event scoring later.
    - Score: e.g., `2:34` (time format)
    - Type: `Time`
 3. Click "Save & Complete Event"
-4. ✅ **Expected:** Scores saved, results displayed with medals (🥇🥈🥉)
+4. ✅ **Expected:** Scores saved, results displayed with medals (🥇🥈🥉🏅)
 
 #### Test: View Already-Scored Event
 1. Try to select the same event again

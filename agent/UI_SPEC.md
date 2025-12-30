@@ -179,7 +179,7 @@ A crisp, modern winter theme with bold team color accents.
 │  🥇 1. Pink Flamingos      12 pts  │
 │  🥈 2. Golden Bees         10 pts  │
 │  🥉 3. Green Giants         8 pts  │
-│     4. Orange Crush         6 pts  │
+│  🏅 4. Orange Crush         6 pts  │
 │                                     │
 │  [Events completed: 3/8]            │
 └─────────────────────────────────────┘
@@ -284,7 +284,7 @@ A crisp, modern winter theme with bold team color accents.
 │  🥇 Pink Flamingos    2:34   +4 pts │
 │  🥈 Golden Bees       2:45   +3 pts │
 │  🥉 Green Giants      2:58   +2 pts │
-│     Orange Crush      3:12   +1 pt  │
+│  🏅  Orange Crush      3:12   +1 pt  │
 │                                     │
 │  ─────────────────────────          │
 │                                     │
@@ -340,7 +340,7 @@ A crisp, modern winter theme with bold team color accents.
 ```
 
 **Components:**
-- Position badges (🥇🥈🥉)
+- Position badges (🥇🥈🥉🏅)
 - Team cards with color indicators
 - Collapsible point breakdown
 - Bonus points indicator

@@ -115,7 +115,7 @@ Phase 2 has been successfully completed! This phase implemented the complete adm
 - Flexible score input (supports times like "2:34" or numbers)
 - Score type selection
 - Team color indicators for easy identification
-- Result display with medal emojis (🥇🥈🥉)
+- Result display with medal emojis (🥇🥈🥉🏅)
 - Prevention of duplicate scoring
 
 **Location:** `ui/src/pages/admin/AdminScores.tsx`
