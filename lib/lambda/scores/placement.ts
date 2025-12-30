@@ -7,7 +7,6 @@ interface PlacementScore {
   teamId: string;
   place: number;
   rawScore: string;
-  rawScoreType: 'time' | 'number' | 'text';
 }
 
 interface SubmitPlacementRequest {
@@ -50,20 +49,12 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const savedScores = [];
 
     for (const placement of placements) {
-      const { teamId, place, rawScore, rawScoreType } = placement;
+      const { teamId, place, rawScore } = placement;
 
-      if (!teamId || !place || !rawScore || !rawScoreType) {
+      if (!teamId || !place || !rawScore) {
         return errorResponse(
           ErrorCodes.VALIDATION_ERROR.code,
-          'Each placement must have teamId, place, rawScore, and rawScoreType',
-          ErrorCodes.VALIDATION_ERROR.status
-        );
-      }
-
-      if (rawScoreType !== 'time' && rawScoreType !== 'number' && rawScoreType !== 'text') {
-        return errorResponse(
-          ErrorCodes.VALIDATION_ERROR.code,
-          'rawScoreType must be one of: time, number, text',
+          'Each placement must have teamId, place, and rawScore',
           ErrorCodes.VALIDATION_ERROR.status
         );
       }
@@ -75,7 +66,6 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
         teamId,
         place,
         rawScore,
-        rawScoreType,
         createdAt: now,
         updatedAt: now,
       };

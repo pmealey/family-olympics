@@ -185,7 +185,6 @@ Common Attributes:
 Placement-specific Attributes:
 - place: Number - 1, 2, 3, or 4
 - rawScore: String - the actual score (time, distance, etc.)
-- rawScoreType: String - "time" | "number" | "text"
 
 Judged-specific Attributes:
 - judgeName: String
@@ -201,7 +200,6 @@ Judged-specific Attributes:
   "teamId": "team-abc123",
   "place": 1,
   "rawScore": "2:34",
-  "rawScoreType": "time",
   "createdAt": "2025-02-15T11:00:00Z",
   "updatedAt": "2025-02-15T11:00:00Z"
 }

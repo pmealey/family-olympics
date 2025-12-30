@@ -21,7 +21,6 @@ export const AdminScores: React.FC = () => {
   const [placementData, setPlacementData] = useState<Record<string, {
     place: number;
     rawScore: string;
-    rawScoreType: 'time' | 'number' | 'text';
   }>>({});
 
   useEffect(() => {
@@ -55,7 +54,6 @@ export const AdminScores: React.FC = () => {
         teamId,
         place: data.place,
         rawScore: data.rawScore,
-        rawScoreType: data.rawScoreType,
       }));
 
     if (placements.length === 0) {
@@ -80,7 +78,6 @@ export const AdminScores: React.FC = () => {
         ...placementData[teamId],
         place: placementData[teamId]?.place || 0,
         rawScore: placementData[teamId]?.rawScore || '',
-        rawScoreType: placementData[teamId]?.rawScoreType || 'time',
         [field]: value,
       },
     });
@@ -136,7 +133,6 @@ export const AdminScores: React.FC = () => {
       teamId: result.teamId,
       place: index + 1,
       rawScore: result.totalScore.toString(),
-      rawScoreType: 'number' as const,
     }));
 
     const submitResult = await submitPlacementScores(currentYear, selectedEvent.eventId, placements);
@@ -309,17 +305,6 @@ export const AdminScores: React.FC = () => {
                         value={placementData[team.teamId]?.rawScore || ''}
                         onChange={(e) => updatePlacement(team.teamId, 'rawScore', e.target.value)}
                         placeholder="2:34 or 15"
-                      />
-                      
-                      <Select
-                        label="Type"
-                        value={placementData[team.teamId]?.rawScoreType || 'time'}
-                        onChange={(e) => updatePlacement(team.teamId, 'rawScoreType', e.target.value)}
-                        options={[
-                          { value: 'time', label: 'Time' },
-                          { value: 'number', label: 'Number' },
-                          { value: 'text', label: 'Text' },
-                        ]}
                       />
                     </div>
                   </div>

@@ -341,8 +341,7 @@ Get all scores for a year (for standings calculation).
         "scoreId": "placement#team-abc123",
         "teamId": "team-abc123",
         "place": 1,
-        "rawScore": "2:34",
-        "rawScoreType": "time"
+        "rawScore": "2:34"
       },
       {
         "eventId": "event-def456",
@@ -375,14 +374,12 @@ Submit placement scores.
     {
       "teamId": "team-abc123",
       "place": 1,
-      "rawScore": "2:34",
-      "rawScoreType": "time"
+      "rawScore": "2:34"
     },
     {
       "teamId": "team-def456",
       "place": 2,
-      "rawScore": "2:45",
-      "rawScoreType": "time"
+      "rawScore": "2:45"
     }
   ]
 }

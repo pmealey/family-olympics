@@ -17,10 +17,10 @@ describe('StatusBadge', () => {
     expect(screen.getByText('COMPLETED ✓')).toBeInTheDocument();
   });
 
-  it('applies animate-pulse to in-progress status', () => {
+  it('applies pulse-subtle to in-progress status', () => {
     render(<StatusBadge status="in-progress" />);
     const badge = screen.getByText('IN PROGRESS');
-    expect(badge.className).toContain('animate-pulse');
+    expect(badge.className).toContain('pulse-subtle');
   });
 
   it('applies correct color classes for upcoming', () => {

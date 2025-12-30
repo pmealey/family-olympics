@@ -54,7 +54,6 @@ export interface PlacementScore {
   teamId: string;
   place: number;
   rawScore: string;
-  rawScoreType: 'time' | 'number' | 'text';
   createdAt?: string;
   updatedAt?: string;
 }
@@ -285,7 +284,6 @@ class ApiClient {
       teamId: string;
       place: number;
       rawScore: string;
-      rawScoreType: 'time' | 'number' | 'text';
     }[]
   ) {
     return this.request<{ scores: PlacementScore[] }>(

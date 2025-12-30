@@ -27,13 +27,11 @@ describe('Scores Placement Handler', () => {
             teamId: 'team-1',
             place: 1,
             rawScore: '10.5',
-            rawScoreType: 'time',
           },
           {
             teamId: 'team-2',
             place: 2,
             rawScore: '11.2',
-            rawScoreType: 'time',
           },
         ],
       }),
@@ -72,30 +70,7 @@ describe('Scores Placement Handler', () => {
         placements: [
           {
             teamId: 'team-1',
-            // Missing place, rawScore, rawScoreType
-          },
-        ],
-      }),
-    } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
-
-    const result = await handler(event);
-
-    expect(result.statusCode).toBe(400);
-    const body = JSON.parse(result.body);
-    expect(body.success).toBe(false);
-    expect(body.error.code).toBe('VALIDATION_ERROR');
-  });
-
-  it('should return 400 if rawScoreType is invalid', async () => {
-    const event = {
-      pathParameters: { year: '2025', eventId: 'event-1' },
-      body: JSON.stringify({
-        placements: [
-          {
-            teamId: 'team-1',
-            place: 1,
-            rawScore: '10.5',
-            rawScoreType: 'invalid',
+            // Missing place, rawScore
           },
         ],
       }),
@@ -122,7 +97,6 @@ describe('Scores Placement Handler', () => {
             teamId: 'team-1',
             place: 1,
             rawScore: '10.5',
-            rawScoreType: 'time',
           },
         ],
       }),
