@@ -335,7 +335,7 @@ class ApiClient {
 
   async deleteScore(year: number, eventId: string, scoreId: string) {
     return this.request<{ deleted: boolean }>(
-      `/olympics/${year}/events/${eventId}/scores/${scoreId}`,
+      `/olympics/${year}/events/${eventId}/scores/${encodeURIComponent(scoreId)}`,
       {
         method: 'DELETE',
       }

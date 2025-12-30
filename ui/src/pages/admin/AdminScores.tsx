@@ -44,6 +44,8 @@ export const AdminScores: React.FC = () => {
       apiClient.submitPlacementScores(year, eventId, placements)
   );
 
+  const [isResetting, setIsResetting] = useState(false);
+
   const handleSubmitPlacement = async () => {
     if (!currentYear || !selectedEvent) return;
 
@@ -146,6 +148,28 @@ export const AdminScores: React.FC = () => {
     }
   };
 
+  const handleResetScores = async () => {
+    if (!currentYear || !selectedEvent || eventScores.length === 0 || isResetting) return;
+
+    setIsResetting(true);
+    try {
+      // Delete all scores for this event
+      for (const score of eventScores) {
+        await apiClient.deleteScore(currentYear, selectedEvent.eventId, score.scoreId);
+      }
+
+      // Reset event status to in-progress
+      await apiClient.updateEvent(currentYear, selectedEvent.eventId, { status: 'in-progress' });
+
+      // Refresh data
+      await loadEventScores();
+      await refreshScores();
+      setPlacementData({});
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   // Get list of events that need scoring
   const eventsNeedingScores = events.filter(e => 
     e.status === 'in-progress' || e.status === 'completed'
@@ -223,7 +247,7 @@ export const AdminScores: React.FC = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <h4 className="font-display font-semibold mb-2">Current Results:</h4>
+                  <h4 className="font-display font-semibold mb-2">Results:</h4>
                   {placementScores
                     .sort((a, b) => a.place - b.place)
                     .map((score) => {
@@ -241,6 +265,16 @@ export const AdminScores: React.FC = () => {
                         </div>
                       );
                     })}
+                </div>
+
+                <div className="flex gap-2 pt-4 border-t">
+                  <Button 
+                    onClick={handleResetScores} 
+                    disabled={isResetting}
+                    variant="secondary"
+                  >
+                    {isResetting ? 'Resetting...' : 'Reset Scores'}
+                  </Button>
                 </div>
               </div>
             ) : (
@@ -363,10 +397,30 @@ export const AdminScores: React.FC = () => {
                       <Button onClick={() => handleFinalizePlacement(judgedResults)} disabled={placementLoading}>
                         {placementLoading ? 'Finalizing...' : 'Confirm & Finalize Results'}
                       </Button>
+                      {judgeScores.length > 0 && (
+                        <Button 
+                          onClick={handleResetScores} 
+                          disabled={isResetting}
+                          variant="secondary"
+                        >
+                          {isResetting ? 'Resetting...' : 'Reset Judge Scores'}
+                        </Button>
+                      )}
                     </div>
                   ) : (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
-                      <p className="text-green-800 font-medium">✓ Results have been finalized</p>
+                    <div className="space-y-4 mt-4">
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <p className="text-green-800 font-medium">✓ Results have been finalized</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={handleResetScores} 
+                          disabled={isResetting}
+                          variant="secondary"
+                        >
+                          {isResetting ? 'Resetting...' : 'Reset All Scores'}
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>

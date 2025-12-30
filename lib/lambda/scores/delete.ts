@@ -5,15 +5,18 @@ import { successResponse, errorResponse, ErrorCodes } from '../shared/response';
 
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
-    const { eventId, scoreId } = event.pathParameters || {};
+    const { eventId, scoreId: encodedScoreId } = event.pathParameters || {};
 
-    if (!eventId || !scoreId) {
+    if (!eventId || !encodedScoreId) {
       return errorResponse(
         ErrorCodes.VALIDATION_ERROR.code,
         'EventId and scoreId parameters are required',
         ErrorCodes.VALIDATION_ERROR.status
       );
     }
+
+    // Decode the scoreId (it may contain # characters that are URL encoded)
+    const scoreId = decodeURIComponent(encodedScoreId);
 
     // Check if score exists
     const existing = await docClient.send(
