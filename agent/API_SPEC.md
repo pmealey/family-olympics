@@ -10,8 +10,7 @@ RESTful API served via AWS API Gateway + Lambda. All endpoints return JSON.
 
 ## Authentication
 
-- **Read operations:** No authentication required
-- **Write operations:** Optional admin password validation via `X-Admin-Token` header
+- **All operations:** No authentication required (authentication will be added in Phase 7)
 - **Judge operations:** Judge name passed in request body (stored client-side)
 
 ---
@@ -84,7 +83,7 @@ List all years.
 ```
 
 #### POST /olympics
-Create a new year. **Admin only.**
+Create a new year.
 
 **Request:**
 ```json
@@ -95,8 +94,7 @@ Create a new year. **Admin only.**
     "2": 3,
     "3": 2,
     "4": 1
-  },
-  "adminPassword": "secret123"
+  }
 }
 ```
 
@@ -112,7 +110,7 @@ Create a new year. **Admin only.**
 ```
 
 #### PUT /olympics/:year
-Update a year's configuration. **Admin only.**
+Update a year's configuration.
 
 **Request:**
 ```json
@@ -124,28 +122,6 @@ Update a year's configuration. **Admin only.**
     "4": 1
   },
   "currentYear": true
-}
-```
-
-#### POST /olympics/validate-password
-Validate admin password for a year.
-
-**Request:**
-```json
-{
-  "year": 2025,
-  "password": "secret123"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "valid": true,
-    "token": "abc123..."
-  }
 }
 ```
 
@@ -193,7 +169,7 @@ Get a specific team.
 ```
 
 #### POST /olympics/:year/teams
-Create a new team. **Admin only.**
+Create a new team.
 
 **Request:**
 ```json
@@ -219,7 +195,7 @@ Create a new team. **Admin only.**
 ```
 
 #### PUT /olympics/:year/teams/:teamId
-Update a team. **Admin only.**
+Update a team.
 
 **Request:**
 ```json
@@ -231,7 +207,7 @@ Update a team. **Admin only.**
 ```
 
 #### DELETE /olympics/:year/teams/:teamId
-Delete a team. **Admin only.**
+Delete a team.
 
 **Response:**
 ```json
@@ -310,7 +286,7 @@ Get a specific event.
 ```
 
 #### POST /olympics/:year/events
-Create a new event. **Admin only.**
+Create a new event.
 
 **Request (Placement Event):**
 ```json
@@ -338,7 +314,7 @@ Create a new event. **Admin only.**
 ```
 
 #### PUT /olympics/:year/events/:eventId
-Update an event. **Admin only.**
+Update an event.
 
 **Request:**
 ```json
@@ -348,7 +324,7 @@ Update an event. **Admin only.**
 ```
 
 #### DELETE /olympics/:year/events/:eventId
-Delete an event. **Admin only.**
+Delete an event.
 
 ---
 
@@ -393,7 +369,7 @@ Get all scores for an event.
 **Response:** Same format as above, filtered to event.
 
 #### POST /olympics/:year/events/:eventId/scores/placement
-Submit placement scores. **Admin only.**
+Submit placement scores.
 
 **Request:**
 ```json
@@ -437,7 +413,7 @@ Update judge scores (same judge, same team).
 **Request:** Same as POST.
 
 #### DELETE /olympics/:year/events/:eventId/scores/:scoreId
-Delete a score. **Admin only.**
+Delete a score.
 
 ---
 
@@ -466,7 +442,7 @@ Allow all origins for local development:
 ```
 Access-Control-Allow-Origin: *
 Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
-Access-Control-Allow-Headers: Content-Type, X-Admin-Token
+Access-Control-Allow-Headers: Content-Type
 ```
 
 ---
@@ -479,7 +455,7 @@ Access-Control-Allow-Headers: Content-Type, X-Admin-Token
 │   ├── get.ts          # GET /olympics, GET /olympics/:year
 │   ├── create.ts       # POST /olympics
 │   ├── update.ts       # PUT /olympics/:year
-│   └── validate.ts     # POST /olympics/validate-password
+│   └── delete.ts       # DELETE /olympics/:year
 ├── teams/
 │   ├── list.ts         # GET /olympics/:year/teams
 │   ├── get.ts          # GET /olympics/:year/teams/:teamId
@@ -500,7 +476,6 @@ Access-Control-Allow-Headers: Content-Type, X-Admin-Token
 │   └── delete.ts       # DELETE score
 └── shared/
     ├── db.ts           # DynamoDB client and helpers
-    ├── response.ts     # Response formatting
-    └── auth.ts         # Admin token validation
+    └── response.ts     # Response formatting
 ```
 

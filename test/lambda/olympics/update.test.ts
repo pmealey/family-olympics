@@ -19,7 +19,7 @@ describe('Olympics Update Handler', () => {
   it('should update an existing Olympics year', async () => {
     // Mock that the year exists
     (docClient.send as jest.Mock).mockResolvedValueOnce({
-      Item: { year: 2025, eventName: 'Old Name', placementPoints: [10, 8, 6] },
+      Item: { year: 2025, eventName: 'Old Name', placementPoints: { '1': 4, '2': 3, '3': 2 } },
     });
     // Mock scan for other years (when setting currentYear)
     (docClient.send as jest.Mock).mockResolvedValueOnce({
@@ -35,7 +35,7 @@ describe('Olympics Update Handler', () => {
       Attributes: {
         year: 2025,
         eventName: 'Updated Name',
-        placementPoints: [12, 10, 8, 6],
+        placementPoints: { '1': 5, '2': 4, '3': 3, '4': 2 },
         currentYear: true,
         updatedAt: new Date().toISOString(),
       },
@@ -45,7 +45,7 @@ describe('Olympics Update Handler', () => {
       pathParameters: { year: '2025' },
       body: JSON.stringify({
         eventName: 'Updated Name',
-        placementPoints: [12, 10, 8, 6],
+        placementPoints: { '1': 5, '2': 4, '3': 3, '4': 2 },
         currentYear: true,
       }),
     } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
@@ -100,7 +100,7 @@ describe('Olympics Update Handler', () => {
       Item: {
         year: 2025,
         eventName: 'Old Name',
-        placementPoints: [10, 8, 6],
+        placementPoints: { '1': 4, '2': 3, '3': 2 },
         currentYear: false,
       },
     });
@@ -113,7 +113,7 @@ describe('Olympics Update Handler', () => {
       Attributes: {
         year: 2025,
         eventName: 'Old Name',
-        placementPoints: [10, 8, 6],
+        placementPoints: { '1': 4, '2': 3, '3': 2 },
         currentYear: true,
         updatedAt: new Date().toISOString(),
       },

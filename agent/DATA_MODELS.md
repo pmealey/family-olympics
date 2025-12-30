@@ -10,7 +10,7 @@ All data is stored in DynamoDB. The data model supports multi-year usage with a 
 
 ### 1. Olympics Table
 
-Stores per-year configuration including placement points and admin password.
+Stores per-year configuration including placement points.
 
 **Table Name:** `FamilyOlympics-Olympics`
 
@@ -27,7 +27,6 @@ Attributes:
       "3": 2,
       "4": 1
     }
-- adminPasswordHash: String (simple hash, not production-grade security)
 - currentYear: Boolean (only one record should have this as true)
 - createdAt: String (ISO timestamp)
 - updatedAt: String (ISO timestamp)
@@ -43,7 +42,6 @@ Attributes:
     "3": 2,
     "4": 1
   },
-  "adminPasswordHash": "abc123...",
   "currentYear": true,
   "createdAt": "2025-01-15T10:00:00Z",
   "updatedAt": "2025-01-15T10:00:00Z"

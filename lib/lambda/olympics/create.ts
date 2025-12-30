@@ -6,7 +6,7 @@ import { successResponse, errorResponse, ErrorCodes } from '../shared/response';
 interface CreateOlympicsRequest {
   year: number;
   eventName?: string;
-  placementPoints: number[];
+  placementPoints: Record<string, number>;
   currentYear?: boolean;
 }
 
@@ -40,10 +40,10 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       );
     }
 
-    if (!Array.isArray(placementPoints)) {
+    if (typeof placementPoints !== 'object' || placementPoints === null || Array.isArray(placementPoints)) {
       return errorResponse(
         ErrorCodes.VALIDATION_ERROR.code,
-        'placementPoints must be an array',
+        'placementPoints must be an object',
         ErrorCodes.VALIDATION_ERROR.status
       );
     }

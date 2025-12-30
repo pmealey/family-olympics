@@ -1,12 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { GetCommand } from '@aws-sdk/lib-dynamodb';
+import { DeleteCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient, OLYMPICS_TABLE } from '../shared/db';
 import { successResponse, errorResponse, ErrorCodes } from '../shared/response';
-import { generateToken } from '../shared/auth';
-
-interface ValidatePasswordRequest {
-  password: string;
-}
 
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
@@ -20,30 +15,31 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       );
     }
 
-    if (!event.body) {
+    // Check if olympics year exists
+    const existing = await docClient.send(
+      new GetCommand({
+        TableName: OLYMPICS_TABLE,
+        Key: { year: parseInt(year) },
+      })
+    );
+
+    if (!existing.Item) {
       return errorResponse(
-        ErrorCodes.VALIDATION_ERROR.code,
-        'Request body is required',
-        ErrorCodes.VALIDATION_ERROR.status
+        ErrorCodes.NOT_FOUND.code,
+        `Olympics year ${year} not found`,
+        ErrorCodes.NOT_FOUND.status
       );
     }
 
-    const body: ValidatePasswordRequest = JSON.parse(event.body);
-    const { password } = body;
+    // Delete the olympics year
+    await docClient.send(
+      new DeleteCommand({
+        TableName: OLYMPICS_TABLE,
+        Key: { year: parseInt(year) },
+      })
+    );
 
-    if (!password) {
-      return errorResponse(
-        ErrorCodes.VALIDATION_ERROR.code,
-        'password is required',
-        ErrorCodes.VALIDATION_ERROR.status
-      );
-    }
-
-    // For now, always return valid (no password protection)
-    return successResponse({
-      valid: true,
-      token: generateToken(),
-    });
+    return successResponse({ deleted: true });
   } catch (error) {
     console.error('Error:', error);
     return errorResponse(

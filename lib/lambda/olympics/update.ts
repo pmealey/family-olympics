@@ -5,7 +5,7 @@ import { successResponse, errorResponse, ErrorCodes } from '../shared/response';
 
 interface UpdateOlympicsRequest {
   eventName?: string;
-  placementPoints?: number[];
+  placementPoints?: Record<string, number>;
   currentYear?: boolean;
 }
 

@@ -26,7 +26,7 @@ describe('Olympics Create Handler', () => {
       body: JSON.stringify({
         year: 2025,
         eventName: 'Family Olympics 2025',
-        placementPoints: [10, 8, 6, 4, 2, 1],
+        placementPoints: { '1': 4, '2': 3, '3': 2, '4': 1 },
         currentYear: true,
       }),
     } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
@@ -38,7 +38,7 @@ describe('Olympics Create Handler', () => {
     expect(body.success).toBe(true);
     expect(body.data.year).toBe(2025);
     expect(body.data.eventName).toBe('Family Olympics 2025');
-    expect(body.data.placementPoints).toEqual([10, 8, 6, 4, 2, 1]);
+    expect(body.data.placementPoints).toEqual({ '1': 4, '2': 3, '3': 2, '4': 1 });
     expect(body.data.createdAt).toBeDefined();
     expect(body.data.updatedAt).toBeDefined();
 
@@ -58,7 +58,7 @@ describe('Olympics Create Handler', () => {
       body: JSON.stringify({
         year: 2025,
         eventName: 'Family Olympics 2025',
-        placementPoints: [10, 8, 6, 4, 2, 1],
+        placementPoints: { '1': 4, '2': 3, '3': 2, '4': 1 },
       }),
     } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
 
@@ -91,7 +91,7 @@ describe('Olympics Create Handler', () => {
       body: JSON.stringify({
         year: 'invalid',
         eventName: 'Test Olympics',
-        placementPoints: [10, 8, 6],
+        placementPoints: { '1': 4, '2': 3, '3': 2 },
       }),
     } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
 
@@ -103,12 +103,29 @@ describe('Olympics Create Handler', () => {
     expect(body.error.code).toBe('VALIDATION_ERROR');
   });
 
-  it('should return 400 if placementPoints is not an array', async () => {
+  it('should return 400 if placementPoints is not an object', async () => {
     const event = {
       body: JSON.stringify({
         year: 2025,
         eventName: 'Test Olympics',
         placementPoints: 'invalid',
+      }),
+    } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
+
+    const result = await handler(event);
+
+    expect(result.statusCode).toBe(400);
+    const body = JSON.parse(result.body);
+    expect(body.success).toBe(false);
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('should return 400 if placementPoints is an array', async () => {
+    const event = {
+      body: JSON.stringify({
+        year: 2025,
+        eventName: 'Test Olympics',
+        placementPoints: [10, 8, 6],
       }),
     } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
 
@@ -129,7 +146,7 @@ describe('Olympics Create Handler', () => {
       body: JSON.stringify({
         year: 2025,
         eventName: 'Test Olympics',
-        placementPoints: [10, 8, 6],
+        placementPoints: { '1': 4, '2': 3, '3': 2 },
       }),
     } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
 

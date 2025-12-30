@@ -40,11 +40,7 @@ function App() {
         />
         <Route
           path="/admin"
-          element={
-            <PublicLayout>
-              <Admin />
-            </PublicLayout>
-          }
+          element={<Admin />}
         />
       </Routes>
     </Router>

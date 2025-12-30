@@ -104,8 +104,8 @@ export class FamilyOlympicsStack extends cdk.Stack {
       ...bundlingConfig,
     });
 
-    const validatePasswordHandler = new nodejs.NodejsFunction(this, 'ValidatePasswordHandler', {
-      entry: join(__dirname, 'lambda/olympics/validate.ts'),
+    const deleteOlympicsHandler = new nodejs.NodejsFunction(this, 'DeleteOlympicsHandler', {
+      entry: join(__dirname, 'lambda/olympics/delete.ts'),
       environment: lambdaEnvironment,
       ...bundlingConfig,
     });
@@ -209,9 +209,9 @@ export class FamilyOlympicsStack extends cdk.Stack {
 
     // Olympics
     olympicsTable.grantReadData(getOlympicsHandler);
-    olympicsTable.grantReadData(validatePasswordHandler);
     olympicsTable.grantReadWriteData(createOlympicsHandler); // Needs read to check if exists
     olympicsTable.grantReadWriteData(updateOlympicsHandler); // Needs read to check if exists
+    olympicsTable.grantReadWriteData(deleteOlympicsHandler); // Needs read to check if exists
 
     // Teams
     teamsTable.grantReadData(listTeamsHandler);
@@ -256,12 +256,10 @@ export class FamilyOlympicsStack extends cdk.Stack {
     const olympicsCurrent = olympics.addResource('current');
     olympicsCurrent.addMethod('GET', new apigateway.LambdaIntegration(getOlympicsHandler));
 
-    const olympicsValidate = olympics.addResource('validate-password');
-    olympicsValidate.addMethod('POST', new apigateway.LambdaIntegration(validatePasswordHandler));
-
     const olympicsYear = olympics.addResource('{year}');
     olympicsYear.addMethod('GET', new apigateway.LambdaIntegration(getOlympicsHandler));
     olympicsYear.addMethod('PUT', new apigateway.LambdaIntegration(updateOlympicsHandler));
+    olympicsYear.addMethod('DELETE', new apigateway.LambdaIntegration(deleteOlympicsHandler));
 
     // Teams routes
     const olympicsYearTeams = olympicsYear.addResource('teams');
