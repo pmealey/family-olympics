@@ -102,7 +102,7 @@ export const Schedule: React.FC = () => {
                 </CardBody>
               </Card>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-6">
                 {eventsByDay[1].map((event) => (
                   <EventCard key={event.eventId} event={event} />
                 ))}
@@ -124,7 +124,7 @@ export const Schedule: React.FC = () => {
                 </CardBody>
               </Card>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-6">
                 {eventsByDay[2].map((event) => (
                   <EventCard key={event.eventId} event={event} />
                 ))}

@@ -52,7 +52,7 @@ export const EventCard: React.FC<EventCardProps> = ({
   };
 
   return (
-    <Link to={`/events/${event.eventId}`} className={className}>
+    <Link to={`/events/${event.eventId}`} className={`block ${className}`}>
       <Card onClick={() => {}} className="transition-all">
         <CardBody>
           <div className="flex items-start justify-between">
