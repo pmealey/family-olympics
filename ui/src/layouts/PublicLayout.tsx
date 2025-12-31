@@ -12,15 +12,6 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
   
   return (
     <div className="min-h-screen flex flex-col bg-ice-blue">
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-40">
-        <div className="container mx-auto px-4 py-4">
-          <h1 className="text-2xl font-display font-bold text-winter-dark text-center">
-            ❄️ Family Olympics ❄️
-          </h1>
-        </div>
-      </header>
-
       {/* Main Content */}
       <main className="flex-1 container mx-auto px-4 py-6 pb-24">
         {children}
