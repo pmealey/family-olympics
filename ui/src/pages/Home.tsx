@@ -63,7 +63,7 @@ export const Home: React.FC = () => {
       </div>
 
       {/* Schedule CTA */}
-      <Link to="/schedule">
+      <Link className="block" to="/schedule">
         <Button variant="primary" size="lg" fullWidth>
           📅 View Schedule →
         </Button>
