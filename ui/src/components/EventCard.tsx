@@ -38,19 +38,6 @@ export const EventCard: React.FC<EventCardProps> = ({
     }
   };
 
-  // Get event icon based on name or type
-  const getEventIcon = () => {
-    const name = event.name.toLowerCase();
-    if (name.includes('snow')) return '❄️';
-    if (name.includes('ski')) return '⛷️';
-    if (name.includes('sled')) return '🛷';
-    if (name.includes('ice')) return '🧊';
-    if (name.includes('sculpture')) return '⛄';
-    if (name.includes('trivia')) return '🎭';
-    if (name.includes('talent')) return '🎪';
-    return '🏆';
-  };
-
   return (
     <Link to={`/events/${event.eventId}`} className={`block ${className}`}>
       <Card onClick={() => {}} className="transition-all">
@@ -58,7 +45,6 @@ export const EventCard: React.FC<EventCardProps> = ({
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center space-x-2 mb-2">
-                <span className="text-2xl">{getEventIcon()}</span>
                 <h4 className="font-display font-semibold text-lg">
                   {event.name}
                 </h4>

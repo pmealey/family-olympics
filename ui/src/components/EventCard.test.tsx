@@ -213,32 +213,6 @@ describe('EventCard', () => {
     });
   });
 
-  describe('Event Icons', () => {
-    const iconTests = [
-      { name: 'Snow Sculpture', expectedIcon: '❄️' },
-      { name: 'Ski Race', expectedIcon: '⛷️' },
-      { name: 'Sled Competition', expectedIcon: '🛷' },
-      { name: 'Ice Challenge', expectedIcon: '🧊' },
-      { name: 'Trivia Night', expectedIcon: '🎭' },
-      { name: 'Talent Show', expectedIcon: '🎪' },
-      { name: 'Generic Event', expectedIcon: '🏆' },
-    ];
-
-    iconTests.forEach(({ name, expectedIcon }) => {
-      it(`should display ${expectedIcon} icon for "${name}"`, () => {
-        const event = { ...baseEvent, name };
-
-        const { container } = render(
-          <RouterWrapper>
-            <EventCard event={event} />
-          </RouterWrapper>
-        );
-
-        expect(container.textContent).toContain(expectedIcon);
-      });
-    });
-  });
-
   describe('Link Behavior', () => {
     it('should link to the event detail page', () => {
       const { container } = render(
