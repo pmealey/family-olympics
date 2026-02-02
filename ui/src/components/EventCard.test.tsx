@@ -22,14 +22,14 @@ describe('EventCard', () => {
   };
 
   describe('Time Formatting', () => {
-    it('should display "Time TBD" when scheduledTime is not provided', () => {
+    it('should not display a time row when scheduledTime is not provided', () => {
       render(
         <RouterWrapper>
           <EventCard event={baseEvent} />
         </RouterWrapper>
       );
 
-      expect(screen.getByText('Time TBD')).toBeInTheDocument();
+      expect(screen.queryByText('🕐')).not.toBeInTheDocument();
     });
 
     it('should format time-only string (HH:MM) correctly', () => {
@@ -209,7 +209,7 @@ describe('EventCard', () => {
         </RouterWrapper>
       );
 
-      expect(screen.getByText(/Judged \(0 categories\)/)).toBeInTheDocument();
+      expect(screen.getByText(/^Judged$/)).toBeInTheDocument();
     });
   });
 

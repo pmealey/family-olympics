@@ -147,10 +147,12 @@ const JudgeEventCard: React.FC<JudgeEventCardProps> = ({
           {/* Event Header */}
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <h4 className="text-lg font-display font-semibold">{event.name}</h4>
-              <p className="text-sm text-winter-gray mt-1">
-                📍 {event.location}
-              </p>
+              <h4 className="text-lg font-display font-semibold">
+                {event.name || 'Untitled Event'}
+              </h4>
+              {event.location && (
+                <p className="text-sm text-winter-gray mt-1">📍 {event.location}</p>
+              )}
             </div>
             <StatusBadge status={event.status} />
           </div>

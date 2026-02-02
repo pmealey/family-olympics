@@ -49,6 +49,26 @@ describe('Events Create Handler', () => {
     expect(docClient.send).toHaveBeenCalledWith(expect.any(PutCommand));
   });
 
+  it('should create an event with only a name (defaults scoringType to placement)', async () => {
+    (docClient.send as jest.Mock).mockResolvedValueOnce({});
+
+    const event = {
+      pathParameters: { year: '2025' },
+      body: JSON.stringify({
+        name: 'Barebones Event',
+        // scoringType omitted
+      }),
+    } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
+
+    const result = await handler(event);
+
+    expect(result.statusCode).toBe(201);
+    const body = JSON.parse(result.body);
+    expect(body.success).toBe(true);
+    expect(body.data.name).toBe('Barebones Event');
+    expect(body.data.scoringType).toBe('placement');
+  });
+
   it('should create a new judged event with categories', async () => {
     (docClient.send as jest.Mock).mockResolvedValueOnce({});
 
@@ -80,8 +100,7 @@ describe('Events Create Handler', () => {
     const event = {
       pathParameters: { year: '2025' },
       body: JSON.stringify({
-        name: 'Event Alpha',
-        // Missing location, rulesUrl, scoringType
+        // Missing name
       }),
     } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
 
@@ -112,24 +131,25 @@ describe('Events Create Handler', () => {
     expect(body.error.code).toBe('VALIDATION_ERROR');
   });
 
-  it('should return 400 if judged event missing categories', async () => {
+  it('should allow judged event with no categories', async () => {
+    (docClient.send as jest.Mock).mockResolvedValueOnce({});
+
     const event = {
       pathParameters: { year: '2025' },
       body: JSON.stringify({
-        name: 'Event Alpha',
-        location: 'Park',
-        rulesUrl: 'https://example.com/rules',
+        name: 'Judged Event',
         scoringType: 'judged',
-        // Missing judgedCategories
+        // judgedCategories omitted
       }),
     } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
 
     const result = await handler(event);
 
-    expect(result.statusCode).toBe(400);
+    expect(result.statusCode).toBe(201);
     const body = JSON.parse(result.body);
-    expect(body.success).toBe(false);
-    expect(body.error.code).toBe('VALIDATION_ERROR');
+    expect(body.success).toBe(true);
+    expect(body.data.scoringType).toBe('judged');
+    expect(body.data.judgedCategories).toBeUndefined();
   });
 
   it('should handle DynamoDB errors gracefully', async () => {

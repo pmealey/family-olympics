@@ -46,7 +46,7 @@ export const EventDetail: React.FC = () => {
 
   // Format time for display
   const formatTime = (timeString?: string) => {
-    if (!timeString) return 'Time TBD';
+    if (!timeString) return '';
 
     try {
       // Time is always in HH:MM format from the admin time input
@@ -142,6 +142,10 @@ export const EventDetail: React.FC = () => {
     );
   }
 
+  const hasDay = event.scheduledDay === 1 || event.scheduledDay === 2;
+  const hasTime = Boolean(event.scheduledTime);
+  const hasDateRow = hasDay || hasTime;
+
   return (
     <div className="space-y-6">
       <Link to="/schedule">
@@ -154,18 +158,21 @@ export const EventDetail: React.FC = () => {
       <Card>
         <CardBody>
           <div className="flex items-start justify-between mb-4">
-            <h2 className="text-2xl font-display font-bold">{event.name}</h2>
+            <h2 className="text-2xl font-display font-bold">{event.name || 'Untitled Event'}</h2>
             <StatusBadge status={event.status} />
           </div>
 
           <div className="space-y-2 text-winter-gray">
-            <div className="flex items-center space-x-2">
-              <span>📅</span>
-              <span>
-                {event.scheduledDay && `Day ${event.scheduledDay} • `}
-                {formatTime(event.scheduledTime)}
-              </span>
-            </div>
+            {hasDateRow && (
+              <div className="flex items-center space-x-2">
+                <span>📅</span>
+                <span>
+                  {hasDay && `Day ${event.scheduledDay}`}
+                  {hasDay && hasTime ? ' • ' : ''}
+                  {hasTime ? formatTime(event.scheduledTime || undefined) : ''}
+                </span>
+              </div>
+            )}
 
             {event.location && (
               <div className="flex items-center space-x-2">
@@ -174,14 +181,16 @@ export const EventDetail: React.FC = () => {
               </div>
             )}
 
-            <div className="flex items-center space-x-2">
-              <span>🎯</span>
-              <span className="capitalize">
-                {event.scoringType === 'judged'
-                  ? `Judged Event (${event.judgedCategories?.length || 0} categories)`
-                  : 'Placement Event'}
-              </span>
-            </div>
+            {event.scoringType && (
+              <div className="flex items-center space-x-2">
+                <span>🎯</span>
+                <span className="capitalize">
+                  {event.scoringType === 'judged'
+                    ? `Judged Event${event.judgedCategories?.length ? ` (${event.judgedCategories.length} categories)` : ''}`
+                    : 'Placement Event'}
+                </span>
+              </div>
+            )}
           </div>
         </CardBody>
       </Card>
@@ -272,7 +281,7 @@ export const EventDetail: React.FC = () => {
                 src={event.rulesUrl}
                 className="w-full h-full"
                 style={{ minHeight: '400px', border: 'none' }}
-                title={`Rules for ${event.name}`}
+                title={`Rules for ${event.name || 'Untitled Event'}`}
               />
             </div>
             <div className="mt-4 text-center">

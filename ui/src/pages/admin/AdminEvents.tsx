@@ -50,29 +50,50 @@ export const AdminEvents: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!currentYear) return;
-    
-    if (!formData.name.trim() || !formData.location.trim()) {
-      alert('Please provide event name and location');
+
+    const trimOrNull = (value: string) => (value.trim() ? value.trim() : null);
+
+    if (!formData.name.trim()) {
+      alert('Please provide an event name');
       return;
     }
 
     const data: any = {
-      name: formData.name,
-      location: formData.location,
-      rulesUrl: formData.rulesUrl,
       scoringType: formData.scoringType,
-      scheduledDay: formData.scheduledDay,
-      scheduledTime: formData.scheduledTime || undefined,
-      status: formData.status,
     };
 
-    if (formData.scoringType === 'judged') {
-      const categories = formData.judgedCategories.filter(c => c.trim());
-      if (categories.length === 0) {
-        alert('Please provide at least one judging category');
-        return;
+    const categories =
+      formData.scoringType === 'judged'
+        ? formData.judgedCategories.map((c) => c.trim()).filter(Boolean)
+        : [];
+
+    if (editingEvent) {
+      // For updates, explicitly send nulls so fields can be cleared.
+      data.name = formData.name.trim();
+      data.location = trimOrNull(formData.location);
+      data.rulesUrl = trimOrNull(formData.rulesUrl);
+      data.status = formData.status;
+      data.scheduledDay =
+        formData.scheduledDay === 1 || formData.scheduledDay === 2
+          ? formData.scheduledDay
+          : null;
+      data.scheduledTime = trimOrNull(formData.scheduledTime);
+      data.judgedCategories =
+        formData.scoringType === 'judged' ? (categories.length > 0 ? categories : null) : null;
+    } else {
+      // For creates, only send fields that are present.
+      data.name = formData.name.trim();
+      if (formData.location.trim()) data.location = formData.location.trim();
+      if (formData.rulesUrl.trim()) data.rulesUrl = formData.rulesUrl.trim();
+      if (formData.scheduledDay === 1 || formData.scheduledDay === 2) {
+        data.scheduledDay = formData.scheduledDay;
       }
-      data.judgedCategories = categories;
+      if (formData.scheduledTime.trim()) data.scheduledTime = formData.scheduledTime.trim();
+      data.status = formData.status;
+
+      if (formData.scoringType === 'judged' && categories.length > 0) {
+        data.judgedCategories = categories;
+      }
     }
 
     if (editingEvent) {
@@ -127,12 +148,12 @@ export const AdminEvents: React.FC = () => {
   const handleEdit = (event: Event) => {
     setEditingEvent(event);
     setFormData({
-      name: event.name,
-      location: event.location,
-      rulesUrl: event.rulesUrl,
+      name: event.name || '',
+      location: event.location || '',
+      rulesUrl: event.rulesUrl || '',
       scoringType: event.scoringType,
       judgedCategories: event.judgedCategories?.length ? event.judgedCategories : [''],
-      scheduledDay: event.scheduledDay || 1,
+      scheduledDay: event.scheduledDay || 0,
       scheduledTime: event.scheduledTime || '',
       status: event.status,
     });
@@ -283,6 +304,7 @@ export const AdminEvents: React.FC = () => {
                   value={formData.scheduledDay.toString()}
                   onChange={(e) => setFormData({ ...formData, scheduledDay: parseInt(e.target.value) })}
                   options={[
+                    { value: '0', label: 'Unscheduled' },
                     { value: '1', label: 'Day 1' },
                     { value: '2', label: 'Day 2' },
                   ]}
@@ -367,18 +389,18 @@ export const AdminEvents: React.FC = () => {
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
-                              <h4 className="text-lg font-display font-bold">{event.name}</h4>
+                              <h4 className="text-lg font-display font-bold">{event.name || 'Untitled Event'}</h4>
                               <StatusBadge status={event.status} />
                             </div>
                             
                             <div className="text-winter-gray text-sm space-y-1">
-                              <div>📍 {event.location}</div>
+                              {event.location && <div>📍 {event.location}</div>}
                               {event.scheduledTime && (
                                 <div>🕒 {new Date(`2000-01-01T${event.scheduledTime}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                               )}
                               <div>
                                 {event.scoringType === 'placement' ? '📊 Placement' : '⚖️ Judged'}
-                                {event.judgedCategories && ` (${event.judgedCategories.length} categories)`}
+                                {event.judgedCategories?.length ? ` (${event.judgedCategories.length} categories)` : ''}
                               </div>
                             </div>
                           </div>

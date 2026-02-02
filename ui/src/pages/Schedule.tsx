@@ -12,12 +12,13 @@ export const Schedule: React.FC = () => {
   // Group events by day and sort by time
   const eventsByDay = useMemo(() => {
     const grouped: Record<number, Event[]> = {
+      0: [],
       1: [],
       2: [],
     };
 
     events.forEach((event) => {
-      const day = event.scheduledDay || 1;
+      const day = event.scheduledDay === 1 || event.scheduledDay === 2 ? event.scheduledDay : 0;
       if (grouped[day]) {
         grouped[day].push(event);
       }
@@ -88,6 +89,20 @@ export const Schedule: React.FC = () => {
         />
       ) : (
         <>
+          {/* Unscheduled */}
+          {eventsByDay[0].length > 0 && (
+            <div>
+              <h3 className="text-lg font-display font-semibold mb-3 text-winter-gray">
+                Unscheduled
+              </h3>
+              <div className="space-y-6">
+                {eventsByDay[0].map((event) => (
+                  <EventCard key={event.eventId} event={event} />
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Day 1 */}
           <div>
             <h3 className="text-lg font-display font-semibold mb-3 text-winter-gray">

@@ -285,6 +285,25 @@ Get a specific event.
 #### POST /olympics/:year/events
 Create a new event.
 
+**Required fields:**
+- `name`
+
+**Optional fields:**
+- `location`
+- `rulesUrl`
+- `scoringType` (defaults to `"placement"`)
+- `judgedCategories` (only used when `scoringType` is `"judged"`)
+- `scheduledDay` (1 or 2)
+- `scheduledTime` (time string, e.g. `"14:00"` or ISO timestamp)
+- `status` (defaults to `"upcoming"`)
+
+**Request (Minimal):**
+```json
+{
+  "name": "Snowball Toss"
+}
+```
+
 **Request (Placement Event):**
 ```json
 {
@@ -293,7 +312,8 @@ Create a new event.
   "rulesUrl": "https://docs.google.com/...",
   "scoringType": "placement",
   "scheduledDay": 1,
-  "scheduledTime": "2025-02-15T10:00:00Z"
+  "scheduledTime": "2025-02-15T10:00:00Z",
+  "status": "upcoming"
 }
 ```
 
@@ -306,7 +326,8 @@ Create a new event.
   "scoringType": "judged",
   "judgedCategories": ["Creativity", "Execution", "Style"],
   "scheduledDay": 2,
-  "scheduledTime": "2025-02-16T14:00:00Z"
+  "scheduledTime": "2025-02-16T14:00:00Z",
+  "status": "upcoming"
 }
 ```
 

@@ -219,7 +219,7 @@ export const AdminScores: React.FC = () => {
                 { value: '', label: 'Select an event...' },
                 ...eventsNeedingScores.map(e => ({
                   value: e.eventId,
-                  label: `${e.name} (${e.scoringType})`,
+                  label: `${e.name || 'Untitled Event'} (${e.scoringType || 'unknown'})`,
                 })),
               ]}
             />
@@ -232,7 +232,7 @@ export const AdminScores: React.FC = () => {
         <Card>
           <CardHeader>
             <h3 className="text-lg font-display font-semibold">
-              Score Placement Event: {selectedEvent.name}
+              Score Placement Event: {selectedEvent.name || 'Untitled Event'}
             </h3>
           </CardHeader>
           <CardBody>
@@ -326,7 +326,7 @@ export const AdminScores: React.FC = () => {
         <Card>
           <CardHeader>
             <h3 className="text-lg font-display font-semibold">
-              Judge Scores: {selectedEvent.name}
+              Judge Scores: {selectedEvent.name || 'Untitled Event'}
             </h3>
           </CardHeader>
           <CardBody>

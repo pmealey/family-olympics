@@ -160,6 +160,52 @@ export const JudgeScoreEntry: React.FC = () => {
     );
   }
 
+  const judgedCategories = (event.judgedCategories || []).filter(Boolean);
+
+  if (event.scoringType !== 'judged') {
+    return (
+      <div className="space-y-6">
+        <Button variant="ghost" onClick={handleBack}>
+          ← Back
+        </Button>
+        <Card>
+          <CardBody>
+            <div className="text-center py-8">
+              <h3 className="text-xl font-display font-bold mb-2">
+                This event isn’t a judged event
+              </h3>
+              <p className="text-winter-gray">
+                Ask an admin to set the scoring type to “Judged”.
+              </p>
+            </div>
+          </CardBody>
+        </Card>
+      </div>
+    );
+  }
+
+  if (judgedCategories.length === 0) {
+    return (
+      <div className="space-y-6">
+        <Button variant="ghost" onClick={handleBack}>
+          ← Back
+        </Button>
+        <Card>
+          <CardBody>
+            <div className="text-center py-8">
+              <h3 className="text-xl font-display font-bold mb-2">
+                No judging categories configured
+              </h3>
+              <p className="text-winter-gray">
+                Ask an admin to edit this event and add judging categories.
+              </p>
+            </div>
+          </CardBody>
+        </Card>
+      </div>
+    );
+  }
+
   // Show aggregate view if all teams are scored or user requested it
   if (showAggregates || teamsToScore.length === 0) {
     return (
@@ -192,7 +238,7 @@ export const JudgeScoreEntry: React.FC = () => {
 
       {/* Event Title */}
       <div className="text-center">
-        <h2 className="text-2xl font-display font-bold">{event.name}</h2>
+        <h2 className="text-2xl font-display font-bold">{event.name || 'Untitled Event'}</h2>
         <p className="text-winter-gray mt-1">
           Scoring: {currentTeam?.name || 'Unknown Team'}
         </p>
@@ -211,7 +257,7 @@ export const JudgeScoreEntry: React.FC = () => {
           </div>
 
           {/* Category Scores */}
-          {event.judgedCategories?.map((category) => (
+          {judgedCategories.map((category) => (
             <ScoreInput
               key={category}
               label={category}
@@ -354,6 +400,8 @@ const AggregateScoresView: React.FC<AggregateScoresViewProps> = ({
     );
   }, [allScores, judgeName]);
 
+  const judgedCategories = (event?.judgedCategories || []).filter(Boolean) as string[];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -370,7 +418,7 @@ const AggregateScoresView: React.FC<AggregateScoresViewProps> = ({
 
       {/* Event Title */}
       <div className="text-center">
-        <h2 className="text-2xl font-display font-bold">{event.name}</h2>
+        <h2 className="text-2xl font-display font-bold">{event.name || 'Untitled Event'}</h2>
         <p className="text-winter-gray mt-1">Score Summary</p>
       </div>
 
@@ -414,7 +462,7 @@ const AggregateScoresView: React.FC<AggregateScoresViewProps> = ({
                     {/* Category Breakdown */}
                     {isEditing ? (
                       <div className="space-y-3 pt-3 border-t border-gray-200">
-                        {event.judgedCategories?.map((category: string) => (
+                        {judgedCategories.map((category: string) => (
                           <ScoreInput
                             key={category}
                             label={category}
@@ -456,7 +504,10 @@ const AggregateScoresView: React.FC<AggregateScoresViewProps> = ({
                               }
                             }}
                             loading={updating}
-                            disabled={Object.keys(editScores).length !== event.judgedCategories?.length}
+                            disabled={
+                              judgedCategories.length === 0 ||
+                              Object.keys(editScores).length !== judgedCategories.length
+                            }
                           >
                             Save
                           </Button>

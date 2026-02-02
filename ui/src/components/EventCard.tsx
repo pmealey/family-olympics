@@ -16,7 +16,7 @@ export const EventCard: React.FC<EventCardProps> = ({
 }) => {
   // Format time for display
   const formatTime = (timeString?: string) => {
-    if (!timeString) return 'Time TBD';
+    if (!timeString) return '';
     
     try {
       // Time is always in HH:MM format from the admin time input
@@ -38,6 +38,10 @@ export const EventCard: React.FC<EventCardProps> = ({
     }
   };
 
+  const hasDay = showDay && (event.scheduledDay === 1 || event.scheduledDay === 2);
+  const hasTime = Boolean(event.scheduledTime);
+  const hasDateRow = hasDay || hasTime;
+
   return (
     <Link to={`/events/${event.eventId}`} className={`block ${className}`}>
       <Card onClick={() => {}} className="transition-all">
@@ -46,18 +50,21 @@ export const EventCard: React.FC<EventCardProps> = ({
             <div className="flex-1">
               <div className="flex items-center space-x-2 mb-2">
                 <h4 className="font-display font-semibold text-lg">
-                  {event.name}
+                  {event.name || 'Untitled Event'}
                 </h4>
               </div>
               
               <div className="space-y-1 text-sm text-winter-gray">
-                <div className="flex items-center space-x-2">
-                  <span>🕐</span>
-                  <span>
-                    {showDay && event.scheduledDay && `Day ${event.scheduledDay} • `}
-                    {formatTime(event.scheduledTime)}
-                  </span>
-                </div>
+                {hasDateRow && (
+                  <div className="flex items-center space-x-2">
+                    <span>🕐</span>
+                    <span>
+                      {hasDay && `Day ${event.scheduledDay}`}
+                      {hasDay && hasTime ? ' • ' : ''}
+                      {hasTime ? formatTime(event.scheduledTime || undefined) : ''}
+                    </span>
+                  </div>
+                )}
                 
                 {event.location && (
                   <div className="flex items-center space-x-2">
@@ -66,14 +73,16 @@ export const EventCard: React.FC<EventCardProps> = ({
                   </div>
                 )}
                 
-                <div className="flex items-center space-x-2">
-                  <span>🎯</span>
-                  <span className="capitalize">
-                    {event.scoringType === 'judged' 
-                      ? `Judged (${event.judgedCategories?.length || 0} categories)`
-                      : 'Placement'}
-                  </span>
-                </div>
+                {event.scoringType && (
+                  <div className="flex items-center space-x-2">
+                    <span>🎯</span>
+                    <span className="capitalize">
+                      {event.scoringType === 'judged'
+                        ? `Judged${event.judgedCategories?.length ? ` (${event.judgedCategories.length} categories)` : ''}`
+                        : 'Placement'}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
             

@@ -35,13 +35,13 @@ export interface Team {
 export interface Event {
   year: number;
   eventId: string;
-  name: string;
-  location: string;
-  rulesUrl: string;
+  name?: string | null;
+  location?: string | null;
+  rulesUrl?: string | null;
   scoringType: 'placement' | 'judged';
-  judgedCategories?: string[];
-  scheduledDay?: number;
-  scheduledTime?: string;
+  judgedCategories?: string[] | null;
+  scheduledDay?: number | null;
+  scheduledTime?: string | null;
   status: 'upcoming' | 'in-progress' | 'completed';
   createdAt?: string;
   updatedAt?: string;
@@ -223,12 +223,12 @@ class ApiClient {
     year: number,
     data: {
       name: string;
-      location: string;
-      rulesUrl: string;
-      scoringType: 'placement' | 'judged';
-      judgedCategories?: string[];
-      scheduledDay?: number;
-      scheduledTime?: string;
+      scoringType?: 'placement' | 'judged';
+      location?: string | null;
+      rulesUrl?: string | null;
+      judgedCategories?: string[] | null;
+      scheduledDay?: number | null;
+      scheduledTime?: string | null;
     }
   ) {
     return this.request<Event>(`/olympics/${year}/events`, {
@@ -241,13 +241,13 @@ class ApiClient {
     year: number,
     eventId: string,
     data: {
-      name?: string;
-      location?: string;
-      rulesUrl?: string;
+      name?: string | null;
+      location?: string | null;
+      rulesUrl?: string | null;
       scoringType?: 'placement' | 'judged';
-      judgedCategories?: string[];
-      scheduledDay?: number;
-      scheduledTime?: string;
+      judgedCategories?: string[] | null;
+      scheduledDay?: number | null;
+      scheduledTime?: string | null;
       status?: 'upcoming' | 'in-progress' | 'completed';
     }
   ) {

@@ -5,13 +5,14 @@ import { docClient, EVENTS_TABLE } from '../shared/db';
 import { successResponse, errorResponse, ErrorCodes } from '../shared/response';
 
 interface CreateEventRequest {
-  name: string;
-  location: string;
-  rulesUrl: string;
-  scoringType: 'placement' | 'judged';
+  name?: string;
+  location?: string;
+  rulesUrl?: string;
+  scoringType?: 'placement' | 'judged';
   judgedCategories?: string[];
   scheduledDay?: number;
   scheduledTime?: string;
+  status?: 'upcoming' | 'in-progress' | 'completed';
 }
 
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
@@ -35,18 +36,19 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     }
 
     const body: CreateEventRequest = JSON.parse(event.body);
-    const { name, location, rulesUrl, scoringType, judgedCategories, scheduledDay, scheduledTime } = body;
+    const { name, location, rulesUrl, scoringType, judgedCategories, scheduledDay, scheduledTime, status } = body;
 
     // Validation
-    if (!name || !location || !rulesUrl || !scoringType) {
+    if (!name || !name.trim()) {
       return errorResponse(
         ErrorCodes.VALIDATION_ERROR.code,
-        'name, location, rulesUrl, and scoringType are required',
+        'name is required',
         ErrorCodes.VALIDATION_ERROR.status
       );
     }
 
-    if (scoringType !== 'placement' && scoringType !== 'judged') {
+    const resolvedScoringType = scoringType ?? 'placement';
+    if (resolvedScoringType !== 'placement' && resolvedScoringType !== 'judged') {
       return errorResponse(
         ErrorCodes.VALIDATION_ERROR.code,
         'scoringType must be either "placement" or "judged"',
@@ -54,12 +56,15 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       );
     }
 
-    if (scoringType === 'judged' && (!judgedCategories || judgedCategories.length === 0)) {
-      return errorResponse(
-        ErrorCodes.VALIDATION_ERROR.code,
-        'judgedCategories is required for judged events',
-        ErrorCodes.VALIDATION_ERROR.status
-      );
+    if (status !== undefined) {
+      const validStatuses = ['upcoming', 'in-progress', 'completed'] as const;
+      if (!validStatuses.includes(status)) {
+        return errorResponse(
+          ErrorCodes.VALIDATION_ERROR.code,
+          `status must be one of: ${validStatuses.join(', ')}`,
+          ErrorCodes.VALIDATION_ERROR.status
+        );
+      }
     }
 
     // Create event
@@ -67,19 +72,22 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const eventData: any = {
       year: parseInt(year),
       eventId: `event-${uuidv4()}`,
-      name,
-      location,
-      rulesUrl,
-      scoringType,
-      scheduledDay: scheduledDay || null,
-      scheduledTime: scheduledTime || null,
-      status: 'upcoming',
+      scoringType: resolvedScoringType,
+      name: name.trim(),
+      location: location?.trim() || null,
+      rulesUrl: rulesUrl?.trim() || null,
+      scheduledDay: scheduledDay === 1 || scheduledDay === 2 ? scheduledDay : null,
+      scheduledTime: scheduledTime?.trim() || null,
+      status: status || 'upcoming',
       createdAt: now,
       updatedAt: now,
     };
 
-    if (scoringType === 'judged' && judgedCategories) {
-      eventData.judgedCategories = judgedCategories;
+    if (resolvedScoringType === 'judged') {
+      const categories = (judgedCategories || []).map((c) => c.trim()).filter(Boolean);
+      if (categories.length > 0) {
+        eventData.judgedCategories = categories;
+      }
     }
 
     await docClient.send(
