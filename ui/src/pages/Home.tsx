@@ -55,9 +55,9 @@ export const Home: React.FC = () => {
     <PageTransition>
       <div className="space-y-6">
       {/* Logo and Title */}
-      <div className="bg-white rounded-lg shadow-md p-8 text-center">
+      <div className="bg-white rounded-lg shadow-md p-4 sm:p-8 text-center">
         <Logo size="lg" className="mx-auto mb-4" />
-        <h2 className="text-3xl font-display font-bold text-winter-dark">
+        <h2 className="text-2xl sm:text-3xl font-display font-bold text-winter-dark">
           Family Olympics {olympics?.year || ''}
         </h2>
       </div>
@@ -72,8 +72,8 @@ export const Home: React.FC = () => {
       {/* Current Standings */}
       <Card>
         <CardBody>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-display font-bold">
+          <div className="flex items-center justify-between gap-2 mb-4">
+            <h3 className="text-lg sm:text-xl font-display font-bold">
               Current Standings
             </h3>
             <RefreshButton onRefresh={handleRefresh} />
@@ -89,24 +89,22 @@ export const Home: React.FC = () => {
             </div>
           ) : (
             <>
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {standings.map((standing) => (
                   <div
                     key={standing.team.teamId}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg transition-all hover:bg-gray-100"
+                    className="flex items-center justify-between gap-2 p-2 sm:p-3 bg-gray-50 rounded-lg transition-all hover:bg-gray-100"
                   >
-                    <div className="flex items-center space-x-3">
-                      <span className="text-2xl min-w-[2rem]">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <span className="text-xl sm:text-2xl shrink-0">
                         {getMedalEmoji(standing.rank) || `${standing.rank}.`}
                       </span>
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <TeamColorIndicator color={standing.team.color} size="sm" />
-                          <span className="font-semibold">{standing.team.name}</span>
-                        </div>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <TeamColorIndicator color={standing.team.color} size="sm" />
+                        <span className="font-semibold truncate">{standing.team.name}</span>
                       </div>
                     </div>
-                    <span className="font-mono font-bold text-lg">
+                    <span className="font-mono font-bold text-base sm:text-lg shrink-0">
                       {formatPoints(standing.totalPoints)}
                     </span>
                   </div>

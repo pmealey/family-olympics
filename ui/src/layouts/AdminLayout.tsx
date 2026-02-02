@@ -62,11 +62,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       <div className="min-h-screen bg-ice-blue">
         {/* Header */}
         <header className="bg-winter-dark text-white shadow-lg">
-          <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <h1 className="text-xl font-display font-bold">
+          <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-4 flex justify-between items-center gap-2">
+            <h1 className="text-lg sm:text-xl font-display font-bold truncate">
               Admin Dashboard
             </h1>
-            <Button variant="ghost" onClick={handleExit} className="text-white hover:bg-white/10">
+            <Button variant="ghost" onClick={handleExit} className="text-white hover:bg-white/10 shrink-0">
               Exit
             </Button>
           </div>
@@ -74,15 +74,15 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
         {/* Tab Navigation */}
         <nav className="bg-white border-b border-winter-gray/20 sticky top-0 z-10 shadow-sm">
-          <div className="container mx-auto px-4 py-0">
-            <div className="flex space-x-1 overflow-x-auto">
+          <div className="container mx-auto px-2 sm:px-4 py-0">
+            <div className="flex overflow-x-auto -mx-2 sm:mx-0">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => handleTabClick(tab.id)}
                   className={`
-                    px-6 py-3 font-medium text-sm whitespace-nowrap transition-colors cursor-pointer
-                    border-b-2
+                    px-3 sm:px-6 py-3 font-medium text-sm whitespace-nowrap transition-colors cursor-pointer
+                    border-b-2 flex-1 sm:flex-none min-w-0
                     ${
                       activeTab === tab.id
                         ? 'border-winter-blue text-winter-blue'
@@ -98,7 +98,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         </nav>
 
         {/* Main Content */}
-        <main className="container mx-auto px-4 py-6">
+        <main className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
           {children}
         </main>
       </div>

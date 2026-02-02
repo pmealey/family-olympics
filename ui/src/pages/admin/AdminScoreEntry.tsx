@@ -252,15 +252,15 @@ export const AdminScoreEntry: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Back Button */}
-      <Button variant="ghost" onClick={() => navigate('/admin/scores')}>
-        ← Back to Scores
+      <Button variant="ghost" size="sm" onClick={() => navigate('/admin/scores')}>
+        ← Back
       </Button>
 
       {/* Event Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-display font-bold">{event.name || 'Untitled Event'}</h2>
-          <p className="text-winter-gray mt-1 capitalize">{event.scoringType} scoring</p>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-xl sm:text-2xl font-display font-bold break-words">{event.name || 'Untitled Event'}</h2>
+          <p className="text-winter-gray mt-1 capitalize text-sm">{event.scoringType} scoring</p>
         </div>
         <StatusBadge completed={event.completed} />
       </div>
@@ -287,15 +287,15 @@ export const AdminScoreEntry: React.FC = () => {
                     .map((score) => {
                       const team = teams.find(t => t.teamId === score.teamId);
                       return (
-                        <div key={score.scoreId} className="flex items-center justify-between p-3 bg-ice-blue rounded">
-                          <div className="flex items-center gap-3">
-                            <span className="font-bold text-winter-blue">
+                        <div key={score.scoreId} className="flex items-center justify-between gap-2 p-2 sm:p-3 bg-ice-blue rounded">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <span className="font-bold text-winter-blue shrink-0">
                               {score.place === 1 ? '🥇' : score.place === 2 ? '🥈' : score.place === 3 ? '🥉' : score.place === 4 ? '🏅' : `${score.place}th`}
                             </span>
                             {team && <TeamColorIndicator color={team.color} />}
-                            <span className="font-medium">{team?.name}</span>
+                            <span className="font-medium truncate">{team?.name}</span>
                           </div>
-                          <span className="font-mono">{score.rawScore}</span>
+                          <span className="font-mono text-sm shrink-0">{score.rawScore}</span>
                         </div>
                       );
                     })}
@@ -318,23 +318,23 @@ export const AdminScoreEntry: React.FC = () => {
                 </p>
 
                 {teams.map((team) => (
-                  <div key={team.teamId} className="border border-winter-gray/20 rounded-lg p-4">
-                    <div className="flex items-center gap-3 mb-3">
+                  <div key={team.teamId} className="border border-winter-gray/20 rounded-lg p-3 sm:p-4">
+                    <div className="flex items-center gap-2 mb-3">
                       <TeamColorIndicator color={team.color} />
-                      <span className="font-display font-bold">{team.name}</span>
+                      <span className="font-display font-bold truncate">{team.name}</span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
                       <Select
                         label="Place"
                         value={placementData[team.teamId]?.place?.toString() || ''}
                         onChange={(e) => updatePlacement(team.teamId, 'place', parseInt(e.target.value) || 0)}
                         options={[
                           { value: '', label: 'Not placed' },
-                          { value: '1', label: '1st Place' },
-                          { value: '2', label: '2nd Place' },
-                          { value: '3', label: '3rd Place' },
-                          { value: '4', label: '4th Place' },
+                          { value: '1', label: '1st' },
+                          { value: '2', label: '2nd' },
+                          { value: '3', label: '3rd' },
+                          { value: '4', label: '4th' },
                         ]}
                       />
 
@@ -393,20 +393,20 @@ export const AdminScoreEntry: React.FC = () => {
                 <div>
                   <h4 className="font-display font-semibold mb-3">Auto-Calculated Results:</h4>
                   <div className="space-y-2">
-                    {judgedResults.map((result) => (
+                      {judgedResults.map((result) => (
                       <div
                         key={result.teamId}
-                        className="flex items-center justify-between p-4 bg-ice-blue rounded-lg"
+                        className="flex items-center justify-between gap-2 p-3 sm:p-4 bg-ice-blue rounded-lg"
                       >
-                        <div className="flex items-center gap-3">
-                          <span className="font-bold text-winter-blue text-lg">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <span className="font-bold text-winter-blue text-base sm:text-lg shrink-0">
                             {result.suggestedPlace}.
                           </span>
                           {result.team && <TeamColorIndicator color={result.team.color} />}
-                          <span className="font-display font-bold">{result.team?.name}</span>
+                          <span className="font-display font-bold truncate">{result.team?.name}</span>
                         </div>
-                        <div className="text-right">
-                          <div className="font-mono font-bold text-lg">{result.totalScore} pts</div>
+                        <div className="text-right shrink-0">
+                          <div className="font-mono font-bold text-base sm:text-lg">{result.totalScore} pts</div>
                           <div className="text-xs text-winter-gray">
                             {result.judgeCount} judge{result.judgeCount !== 1 ? 's' : ''}
                           </div>
@@ -416,17 +416,18 @@ export const AdminScoreEntry: React.FC = () => {
                   </div>
 
                   {placementScores.length === 0 ? (
-                    <div className="flex gap-2 pt-4 border-t mt-4">
-                      <Button onClick={() => handleFinalizePlacement(judgedResults)} disabled={placementLoading}>
-                        {placementLoading ? 'Finalizing...' : 'Confirm & Finalize Results'}
+                    <div className="flex flex-wrap gap-2 pt-4 border-t mt-4">
+                      <Button onClick={() => handleFinalizePlacement(judgedResults)} disabled={placementLoading} className="flex-1 xs:flex-none">
+                        {placementLoading ? 'Finalizing...' : 'Finalize Results'}
                       </Button>
                       {judgeScores.length > 0 && (
                         <Button
                           onClick={handleResetScores}
                           disabled={isResetting}
                           variant="secondary"
+                          className="flex-1 xs:flex-none"
                         >
-                          {isResetting ? 'Resetting...' : 'Reset Judge Scores'}
+                          {isResetting ? 'Resetting...' : 'Reset Scores'}
                         </Button>
                       )}
                     </div>

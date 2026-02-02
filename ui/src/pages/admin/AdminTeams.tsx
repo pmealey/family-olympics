@@ -157,9 +157,9 @@ export const AdminTeams: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-display font-bold">Teams</h2>
-        <Button onClick={() => setShowForm(!showForm)}>
+      <div className="flex flex-wrap justify-between items-center gap-2">
+        <h2 className="text-xl sm:text-2xl font-display font-bold">Teams</h2>
+        <Button onClick={() => setShowForm(!showForm)} size="sm" className="sm:text-base">
           {showForm ? 'Cancel' : '+ Add Team'}
         </Button>
       </div>
@@ -199,17 +199,19 @@ export const AdminTeams: React.FC = () => {
                 </label>
                 <div className="space-y-2">
                   {formData.members.map((member, index) => (
-                    <div key={index} className="flex gap-2">
+                    <div key={index} className="flex flex-col xs:flex-row gap-2">
                       <Input
                         value={member}
                         onChange={(e) => updateMember(index, e.target.value)}
                         placeholder={`Member ${index + 1}`}
+                        className="flex-1"
                       />
                       {formData.members.length > 1 && (
                         <Button
                           variant="danger"
                           size="sm"
                           onClick={() => removeMember(index)}
+                          className="self-end xs:self-auto shrink-0"
                         >
                           Remove
                         </Button>
@@ -222,10 +224,11 @@ export const AdminTeams: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex gap-2 pt-4 border-t">
+              <div className="flex flex-wrap gap-2 pt-4 border-t">
                 <Button
                   onClick={handleSubmit}
                   disabled={createLoading || updateLoading}
+                  className="flex-1 xs:flex-none"
                 >
                   {createLoading || updateLoading ? 'Saving...' : editingTeam ? 'Update Team' : 'Create Team'}
                 </Button>
@@ -237,6 +240,7 @@ export const AdminTeams: React.FC = () => {
                     resetForm();
                   }}
                   disabled={createLoading || updateLoading}
+                  className="flex-1 xs:flex-none"
                 >
                   Cancel
                 </Button>
@@ -271,14 +275,15 @@ export const AdminTeams: React.FC = () => {
           teams.map((team) => (
             <Card key={team.teamId} teamColor={team.color}>
               <CardBody>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                <div className="space-y-3">
+                  {/* Team info */}
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
                       <TeamColorIndicator color={team.color} />
-                      <h3 className="text-xl font-display font-bold">{team.name}</h3>
+                      <h3 className="text-lg sm:text-xl font-display font-bold break-words">{team.name}</h3>
                     </div>
                     
-                    <div className="text-winter-gray mb-2">
+                    <div className="text-winter-gray text-sm mb-2 break-words">
                       {team.members.join(', ')}
                     </div>
                     
@@ -287,7 +292,8 @@ export const AdminTeams: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="flex flex-col gap-2 ml-4">
+                  {/* Action buttons */}
+                  <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
                     <Button
                       variant="secondary"
                       size="sm"

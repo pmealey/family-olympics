@@ -251,8 +251,8 @@ export const JudgeScoreEntry: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" onClick={handleBack}>
+      <div className="flex items-center justify-between gap-2">
+        <Button variant="ghost" size="sm" onClick={handleBack}>
           ← Back
         </Button>
         <Button variant="ghost" size="sm" onClick={() => setShowAggregates(true)}>
@@ -261,9 +261,9 @@ export const JudgeScoreEntry: React.FC = () => {
       </div>
 
       {/* Event Title */}
-      <div className="text-center">
-        <h2 className="text-2xl font-display font-bold">{event.name || 'Untitled Event'}</h2>
-        <p className="text-winter-gray mt-1">
+      <div className="text-center px-2">
+        <h2 className="text-xl sm:text-2xl font-display font-bold break-words">{event.name || 'Untitled Event'}</h2>
+        <p className="text-winter-gray mt-1 truncate">
           Scoring: {currentTeam?.name || 'Unknown Team'}
         </p>
         <p className="text-sm text-winter-gray mt-1">
@@ -275,9 +275,9 @@ export const JudgeScoreEntry: React.FC = () => {
       <Card teamColor={currentTeam?.color}>
         <CardBody className="space-y-6">
           {/* Team Name with Color Indicator */}
-          <div className="flex items-center gap-3 pb-4 border-b border-gray-200">
+          <div className="flex items-center gap-2 sm:gap-3 pb-4 border-b border-gray-200">
             <TeamColorIndicator color={currentTeam?.color} size="lg" />
-            <h3 className="text-xl font-display font-semibold">{currentTeam?.name}</h3>
+            <h3 className="text-lg sm:text-xl font-display font-semibold truncate">{currentTeam?.name}</h3>
           </div>
 
           {/* Category Scores */}
@@ -293,9 +293,9 @@ export const JudgeScoreEntry: React.FC = () => {
 
           {/* Total Score Display */}
           <div className="pt-4 border-t border-gray-200">
-            <div className="flex items-center justify-between">
-              <span className="text-lg font-medium text-winter-dark">Total:</span>
-              <span className="text-2xl font-display font-bold text-winter-accent">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-base sm:text-lg font-medium text-winter-dark">Total:</span>
+              <span className="text-xl sm:text-2xl font-display font-bold text-winter-accent">
                 {totalScore} / {maxScore}
               </span>
             </div>
@@ -429,20 +429,20 @@ const AggregateScoresView: React.FC<AggregateScoresViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" onClick={onBack}>
-          ← Back to Events
+      <div className="flex items-center justify-between gap-2">
+        <Button variant="ghost" size="sm" onClick={onBack}>
+          ← Back
         </Button>
         {hasMoreToScore && (
           <Button variant="secondary" size="sm" onClick={onContinue}>
-            Continue Scoring
+            Continue
           </Button>
         )}
       </div>
 
       {/* Event Title */}
-      <div className="text-center">
-        <h2 className="text-2xl font-display font-bold">{event.name || 'Untitled Event'}</h2>
+      <div className="text-center px-2">
+        <h2 className="text-xl sm:text-2xl font-display font-bold break-words">{event.name || 'Untitled Event'}</h2>
         <p className="text-winter-gray mt-1">Score Summary</p>
       </div>
 
@@ -470,12 +470,12 @@ const AggregateScoresView: React.FC<AggregateScoresViewProps> = ({
               return (
                 <Card key={score.scoreId} teamColor={team?.color}>
                   <CardBody className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
                         <TeamColorIndicator color={team?.color} />
-                        <span className="font-medium">{team?.name}</span>
+                        <span className="font-medium truncate">{team?.name}</span>
                       </div>
-                      <span className="text-lg font-semibold text-winter-accent">
+                      <span className="text-base sm:text-lg font-semibold text-winter-accent shrink-0">
                         {isEditing 
                           ? Object.values(editScores).reduce((sum, val) => sum + val, 0)
                           : total
@@ -499,18 +499,18 @@ const AggregateScoresView: React.FC<AggregateScoresViewProps> = ({
                         ))}
                       </div>
                     ) : (
-                      <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="grid grid-cols-1 xs:grid-cols-2 gap-1 sm:gap-2 text-sm">
                         {Object.entries(score.categoryScores).map(([category, value]) => (
-                          <div key={category} className="flex justify-between">
-                            <span className="text-winter-gray">{category}:</span>
-                            <span className="font-medium">{value}</span>
+                          <div key={category} className="flex justify-between gap-2">
+                            <span className="text-winter-gray truncate">{category}:</span>
+                            <span className="font-medium shrink-0">{value}</span>
                           </div>
                         ))}
                       </div>
                     )}
 
                     {/* Action Buttons */}
-                    <div className="flex gap-2 pt-2">
+                    <div className="flex flex-wrap gap-2 pt-2">
                       {isEditing ? (
                         <>
                           <Button
@@ -608,19 +608,19 @@ const AggregateScoresView: React.FC<AggregateScoresViewProps> = ({
                 >
                   <CardBody>
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          {isLeader && <span className="text-2xl">👑</span>}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          {isLeader && <span className="text-xl sm:text-2xl shrink-0">👑</span>}
                           <TeamColorIndicator color={agg.team.color} />
-                          <div>
-                            <div className="font-medium">{agg.team.name}</div>
+                          <div className="min-w-0">
+                            <div className="font-medium truncate">{agg.team.name}</div>
                             <div className="text-xs text-winter-gray">
                               {agg.judgeCount} judge{agg.judgeCount !== 1 ? 's' : ''}
                             </div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-display font-bold text-winter-accent">
+                        <div className="text-right shrink-0">
+                          <div className="text-xl sm:text-2xl font-display font-bold text-winter-accent">
                             {agg.totalScore}
                           </div>
                           <div className="text-xs text-winter-gray">total pts</div>

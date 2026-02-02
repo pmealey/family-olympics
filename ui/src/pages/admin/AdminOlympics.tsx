@@ -145,11 +145,11 @@ export const AdminOlympics: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-display font-bold">Olympics Configuration</h2>
+      <div className="flex flex-wrap justify-between items-center gap-2">
+        <h2 className="text-xl sm:text-2xl font-display font-bold">Olympics Configuration</h2>
         {!showNewYearForm && (
-          <Button variant="secondary" onClick={() => setShowNewYearForm(true)}>
-            + Create New Year
+          <Button variant="secondary" onClick={() => setShowNewYearForm(true)} size="sm" className="sm:text-base">
+            + New Year
           </Button>
         )}
       </div>
@@ -171,8 +171,8 @@ export const AdminOlympics: React.FC = () => {
                 helpText="Enter the year for this Olympics (e.g., 2025, 2027)"
               />
               
-              <div className="flex gap-2">
-                <Button onClick={handleCreateYear} disabled={createLoading}>
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={handleCreateYear} disabled={createLoading} className="flex-1 xs:flex-none">
                   {createLoading ? 'Creating...' : 'Create Year'}
                 </Button>
                 <Button
@@ -182,6 +182,7 @@ export const AdminOlympics: React.FC = () => {
                     setNewYear('');
                   }}
                   disabled={createLoading}
+                  className="flex-1 xs:flex-none"
                 >
                   Cancel
                 </Button>
@@ -206,36 +207,38 @@ export const AdminOlympics: React.FC = () => {
               {olympicsYears.map((year) => (
                 <div
                   key={year.year}
-                  className={`flex items-center justify-between p-4 border rounded-lg ${
+                  className={`p-3 sm:p-4 border rounded-lg space-y-3 ${
                     year.year === currentYear
                       ? 'border-winter-blue bg-winter-blue/5'
                       : 'border-winter-gray/20'
                   }`}
                 >
-                  <div className="flex items-center gap-4">
-                    <span className="text-2xl font-display font-bold">
+                  {/* Year info */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xl sm:text-2xl font-display font-bold">
                       {year.year}
                     </span>
                     {year.currentYear && (
-                      <span className="px-3 py-1 bg-winter-blue/10 text-winter-blue rounded-full text-sm font-medium">
-                        Active Year
+                      <span className="px-2 py-0.5 bg-winter-blue/10 text-winter-blue rounded-full text-xs sm:text-sm font-medium">
+                        Active
                       </span>
                     )}
                     {year.year === currentYear && (
-                      <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                        Currently Viewing
+                      <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs sm:text-sm font-medium">
+                        Viewing
                       </span>
                     )}
                   </div>
                   
-                  <div className="flex gap-2">
+                  {/* Action buttons */}
+                  <div className="flex flex-wrap gap-2">
                     {year.year !== currentYear && (
                       <Button
                         variant="secondary"
                         size="sm"
                         onClick={() => handleSwitchYear(year.year)}
                       >
-                        Switch to This Year
+                        Switch
                       </Button>
                     )}
                     {!year.currentYear && year.year === currentYear && currentOlympics && (
@@ -249,7 +252,7 @@ export const AdminOlympics: React.FC = () => {
                           await refreshOlympics();
                         }}
                       >
-                        Set as Active
+                        Set Active
                       </Button>
                     )}
                     <Button
@@ -286,10 +289,10 @@ export const AdminOlympics: React.FC = () => {
           </CardHeader>
           <CardBody>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 xs:grid-cols-4 gap-3 sm:gap-4">
                 {['1', '2', '3', '4'].map((place) => (
                   <div key={place}>
-                    <label className="block text-sm font-medium text-winter-gray mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-winter-gray mb-1 sm:mb-2">
                       {place === '1' ? '1st' : place === '2' ? '2nd' : place === '3' ? '3rd' : '4th'} Place
                     </label>
                     <Input
@@ -311,8 +314,8 @@ export const AdminOlympics: React.FC = () => {
               </div>
 
               {editMode && (
-                <div className="flex gap-2 pt-4 border-t">
-                  <Button onClick={handleSavePoints} disabled={updateLoading}>
+                <div className="flex flex-wrap gap-2 pt-4 border-t">
+                  <Button onClick={handleSavePoints} disabled={updateLoading} className="flex-1 xs:flex-none">
                     {updateLoading ? 'Saving...' : 'Save Changes'}
                   </Button>
                   <Button
@@ -324,6 +327,7 @@ export const AdminOlympics: React.FC = () => {
                       }
                     }}
                     disabled={updateLoading}
+                    className="flex-1 xs:flex-none"
                   >
                     Cancel
                   </Button>

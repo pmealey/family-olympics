@@ -125,8 +125,8 @@ export const AdminScores: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-display font-bold">Score Events</h2>
+      <div className="flex flex-wrap justify-between items-center gap-2">
+        <h2 className="text-xl sm:text-2xl font-display font-bold">Score Events</h2>
       </div>
 
       {isLoading ? (
@@ -157,38 +157,35 @@ export const AdminScores: React.FC = () => {
                 className="cursor-pointer hover:shadow-md transition-shadow"
               >
                 <CardBody>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h4 className="text-lg font-display font-bold">
-                          {event.name || 'Untitled Event'}
-                        </h4>
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-start gap-2">
+                      <h4 className="text-base sm:text-lg font-display font-bold break-words flex-1 min-w-0">
+                        {event.name || 'Untitled Event'}
+                      </h4>
+                      <div className="flex flex-wrap gap-1 shrink-0">
                         <span className="px-2 py-0.5 bg-winter-gray/10 text-winter-gray rounded text-xs capitalize">
                           {event.scoringType}
                         </span>
-                      </div>
-
-                      <div className="space-y-1 text-sm text-winter-gray">
-                        {(hasDay || hasTime) && (
-                          <div className="flex items-center space-x-2">
-                            <span>🕐</span>
-                            <span>
-                              {hasDay && `Day ${event.scheduledDay}`}
-                              {hasDay && hasTime ? ' • ' : ''}
-                              {hasTime && formatTime(event.scheduledTime)}
-                            </span>
-                          </div>
-                        )}
-
-                        <div className="flex items-center space-x-2">
-                          <span>{scoredStatus.scored ? '✅' : '⏳'}</span>
-                          <span>{scoredStatus.label}</span>
-                        </div>
+                        <StatusBadge completed={event.completed} />
                       </div>
                     </div>
 
-                    <div className="ml-4">
-                      <StatusBadge completed={event.completed} />
+                    <div className="space-y-1 text-sm text-winter-gray">
+                      {(hasDay || hasTime) && (
+                        <div className="flex items-center space-x-2">
+                          <span>🕐</span>
+                          <span>
+                            {hasDay && `Day ${event.scheduledDay}`}
+                            {hasDay && hasTime ? ' • ' : ''}
+                            {hasTime && formatTime(event.scheduledTime)}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="flex items-center space-x-2">
+                        <span>{scoredStatus.scored ? '✅' : '⏳'}</span>
+                        <span>{scoredStatus.label}</span>
+                      </div>
                     </div>
                   </div>
                 </CardBody>

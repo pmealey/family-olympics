@@ -180,9 +180,9 @@ export const AdminEvents: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-display font-bold">Events & Schedule</h2>
-        <Button onClick={() => setShowForm(!showForm)}>
+      <div className="flex flex-wrap justify-between items-center gap-2">
+        <h2 className="text-xl sm:text-2xl font-display font-bold">Events & Schedule</h2>
+        <Button onClick={() => setShowForm(!showForm)} size="sm" className="sm:text-base">
           {showForm ? 'Cancel' : '+ Add Event'}
         </Button>
       </div>
@@ -256,17 +256,19 @@ export const AdminEvents: React.FC = () => {
                   </label>
                   <div className="space-y-2">
                     {formData.judgedCategories.map((category, index) => (
-                      <div key={index} className="flex gap-2">
+                      <div key={index} className="flex flex-col xs:flex-row gap-2">
                         <Input
                           value={category}
                           onChange={(e) => updateCategory(index, e.target.value)}
                           placeholder={`Category ${index + 1} (e.g., Creativity)`}
+                          className="flex-1"
                         />
                         {formData.judgedCategories.length > 1 && (
                           <Button
                             variant="danger"
                             size="sm"
                             onClick={() => removeCategory(index)}
+                            className="self-end xs:self-auto shrink-0"
                           >
                             Remove
                           </Button>
@@ -280,7 +282,7 @@ export const AdminEvents: React.FC = () => {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:gap-4">
                 <Select
                   label="Day"
                   value={formData.scheduledDay.toString()}
@@ -300,10 +302,11 @@ export const AdminEvents: React.FC = () => {
                 />
               </div>
 
-              <div className="flex gap-2 pt-4 border-t">
+              <div className="flex flex-wrap gap-2 pt-4 border-t">
                 <Button
                   onClick={handleSubmit}
                   disabled={createLoading}
+                  className="flex-1 xs:flex-none"
                 >
                   {createLoading ? 'Creating...' : 'Create Event'}
                 </Button>
@@ -314,6 +317,7 @@ export const AdminEvents: React.FC = () => {
                     resetForm();
                   }}
                   disabled={createLoading}
+                  className="flex-1 xs:flex-none"
                 >
                   Cancel
                 </Button>
@@ -358,15 +362,16 @@ export const AdminEvents: React.FC = () => {
                   {dayEvents.map((event) => (
                     <Card key={event.eventId}>
                       <CardBody>
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <h4 className="text-lg font-display font-bold">{event.name || 'Untitled Event'}</h4>
+                        <div className="space-y-3">
+                          {/* Event info */}
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2 mb-2">
+                              <h4 className="text-base sm:text-lg font-display font-bold break-words">{event.name || 'Untitled Event'}</h4>
                               <StatusBadge completed={event.completed} />
                             </div>
                             
                             <div className="text-winter-gray text-sm space-y-1">
-                              {event.location && <div>📍 {event.location}</div>}
+                              {event.location && <div className="break-words">📍 {event.location}</div>}
                               {event.scheduledTime && (
                                 <div>🕒 {new Date(`2000-01-01T${event.scheduledTime}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                               )}
@@ -377,7 +382,8 @@ export const AdminEvents: React.FC = () => {
                             </div>
                           </div>
                           
-                          <div className="flex flex-col gap-2 ml-4">
+                          {/* Action buttons - horizontal on small screens */}
+                          <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
                             <Button
                               variant="secondary"
                               size="sm"

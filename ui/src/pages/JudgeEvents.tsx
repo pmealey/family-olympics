@@ -52,9 +52,9 @@ export const JudgeEvents: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-display font-bold">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-xl sm:text-2xl font-display font-bold truncate">
             👋 Hi, {judgeName}!
           </h2>
           <p className="text-sm text-winter-gray mt-1">
@@ -66,6 +66,7 @@ export const JudgeEvents: React.FC = () => {
           size="sm"
           onClick={handleEditName}
           aria-label="Change judge name"
+          className="shrink-0"
         >
           Edit
         </Button>
@@ -161,14 +162,14 @@ const JudgeEventCard: React.FC<JudgeEventCardProps> = ({
           {/* Scoring Progress */}
           <div className="space-y-2">
             <p className="text-sm font-medium text-winter-dark">Your scores:</p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 xs:grid-cols-2 gap-1 sm:gap-2">
               {scoringStatus.scored.map((team) => (
                 <div
                   key={team.teamId}
                   className="flex items-center text-sm text-green-600"
                 >
-                  <span className="mr-2">✓</span>
-                  <span>{team.name}</span>
+                  <span className="mr-2 shrink-0">✓</span>
+                  <span className="truncate">{team.name}</span>
                 </div>
               ))}
               {scoringStatus.unscored.map((team) => (
@@ -176,8 +177,8 @@ const JudgeEventCard: React.FC<JudgeEventCardProps> = ({
                   key={team.teamId}
                   className="flex items-center text-sm text-winter-gray"
                 >
-                  <span className="mr-2">○</span>
-                  <span>{team.name}</span>
+                  <span className="mr-2 shrink-0">○</span>
+                  <span className="truncate">{team.name}</span>
                 </div>
               ))}
             </div>
@@ -186,7 +187,7 @@ const JudgeEventCard: React.FC<JudgeEventCardProps> = ({
           {/* Action Button */}
           <div className="pt-2">
             {isComplete ? (
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-sm text-green-600 font-medium">
                   ✓ All teams scored
                 </span>

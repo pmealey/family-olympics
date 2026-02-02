@@ -46,57 +46,52 @@ export const EventCard: React.FC<EventCardProps> = ({
     <Link to={`/events/${event.eventId}`} className={`block ${className}`}>
       <Card onClick={() => {}} className="transition-all">
         <CardBody>
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center space-x-2 mb-2">
-                <h4 className="font-display font-semibold text-lg">
-                  {event.name || 'Untitled Event'}
-                </h4>
-              </div>
-              
-              <div className="space-y-1 text-sm text-winter-gray">
-                {event.sponsor && (
-                  <div className="flex items-center space-x-2">
-                    <span>🤝</span>
-                    <span>Sponsored by {event.sponsor}</span>
-                  </div>
-                )}
-
-                {hasDateRow && (
-                  <div className="flex items-center space-x-2">
-                    <span>🕐</span>
-                    <span>
-                      {hasDay && `Day ${event.scheduledDay}`}
-                      {hasDay && hasTime ? ' • ' : ''}
-                      {hasTime ? formatTime(event.scheduledTime || undefined) : ''}
-                    </span>
-                  </div>
-                )}
-                
-                {event.location && (
-                  <div className="flex items-center space-x-2">
-                    <span>📍</span>
-                    <span>{event.location}</span>
-                  </div>
-                )}
-                
-                {event.scoringType && (
-                  <div className="flex items-center space-x-2">
-                    <span>🎯</span>
-                    <span className="capitalize">
-                      {event.scoringType === 'judged'
-                        ? `Judged${event.judgedCategories?.length ? ` (${event.judgedCategories.length} categories)` : ''}`
-                        : event.scoringType === 'none'
-                        ? 'Non-Scoring'
-                        : 'Placement'}
-                    </span>
-                  </div>
-                )}
-              </div>
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-start gap-2">
+              <h4 className="font-display font-semibold text-base sm:text-lg flex-1 min-w-0 break-words">
+                {event.name || 'Untitled Event'}
+              </h4>
+              <StatusBadge completed={event.completed} />
             </div>
             
-            <div className="ml-4">
-              <StatusBadge completed={event.completed} />
+            <div className="space-y-1 text-sm text-winter-gray">
+              {event.sponsor && (
+                <div className="flex items-center gap-2">
+                  <span className="shrink-0">🤝</span>
+                  <span className="break-words">Sponsored by {event.sponsor}</span>
+                </div>
+              )}
+
+              {hasDateRow && (
+                <div className="flex items-center gap-2">
+                  <span className="shrink-0">🕐</span>
+                  <span>
+                    {hasDay && `Day ${event.scheduledDay}`}
+                    {hasDay && hasTime ? ' • ' : ''}
+                    {hasTime ? formatTime(event.scheduledTime || undefined) : ''}
+                  </span>
+                </div>
+              )}
+              
+              {event.location && (
+                <div className="flex items-center gap-2">
+                  <span className="shrink-0">📍</span>
+                  <span className="break-words">{event.location}</span>
+                </div>
+              )}
+              
+              {event.scoringType && (
+                <div className="flex items-center gap-2">
+                  <span className="shrink-0">🎯</span>
+                  <span className="capitalize">
+                    {event.scoringType === 'judged'
+                      ? `Judged${event.judgedCategories?.length ? ` (${event.judgedCategories.length} cat.)` : ''}`
+                      : event.scoringType === 'none'
+                      ? 'Non-Scoring'
+                      : 'Placement'}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </CardBody>

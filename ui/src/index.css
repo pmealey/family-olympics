@@ -2,6 +2,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 @theme {
+  /* Custom breakpoints for extra small screens (Galaxy Z Fold cover: ~260-280px) */
+  --breakpoint-xs: 400px;
+  
   /* Winter theme colors */
   --color-ice-blue: #f0f7ff;
   --color-winter-dark: #1a2b3c;
@@ -152,6 +155,33 @@
   .touch-target {
     min-height: 44px;
     min-width: 44px;
+  }
+
+  /* Small screen text utilities */
+  .text-responsive-sm {
+    font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+  }
+
+  .text-responsive-base {
+    font-size: clamp(0.875rem, 3vw, 1rem);
+  }
+
+  .text-responsive-lg {
+    font-size: clamp(1rem, 4vw, 1.125rem);
+  }
+
+  .text-responsive-xl {
+    font-size: clamp(1.125rem, 4.5vw, 1.25rem);
+  }
+
+  .text-responsive-2xl {
+    font-size: clamp(1.25rem, 5vw, 1.5rem);
+  }
+
+  /* Prevent text overflow - utility class */
+  .break-anywhere {
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   /* Success animation */
