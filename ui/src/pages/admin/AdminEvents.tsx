@@ -20,6 +20,7 @@ export const AdminEvents: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     sponsor: '',
+    details: '',
     location: '',
     rulesUrl: '',
     scoringType: 'placement' as ScoringType,
@@ -72,6 +73,7 @@ export const AdminEvents: React.FC = () => {
       // For updates, explicitly send nulls so fields can be cleared.
       data.name = formData.name.trim();
       data.sponsor = trimOrNull(formData.sponsor);
+      data.details = trimOrNull(formData.details);
       data.location = trimOrNull(formData.location);
       data.rulesUrl = trimOrNull(formData.rulesUrl);
       data.status = formData.status;
@@ -86,6 +88,7 @@ export const AdminEvents: React.FC = () => {
       // For creates, only send fields that are present.
       data.name = formData.name.trim();
       if (formData.sponsor.trim()) data.sponsor = formData.sponsor.trim();
+      if (formData.details.trim()) data.details = formData.details.trim();
       if (formData.location.trim()) data.location = formData.location.trim();
       if (formData.rulesUrl.trim()) data.rulesUrl = formData.rulesUrl.trim();
       if (formData.scheduledDay === 1 || formData.scheduledDay === 2) {
@@ -139,6 +142,7 @@ export const AdminEvents: React.FC = () => {
     setFormData({
       name: '',
       sponsor: '',
+      details: '',
       location: '',
       rulesUrl: '',
       scoringType: 'placement',
@@ -154,6 +158,7 @@ export const AdminEvents: React.FC = () => {
     setFormData({
       name: event.name || '',
       sponsor: event.sponsor || '',
+      details: event.details || '',
       location: event.location || '',
       rulesUrl: event.rulesUrl || '',
       scoringType: event.scoringType,
@@ -254,6 +259,19 @@ export const AdminEvents: React.FC = () => {
                 onChange={(e) => setFormData({ ...formData, sponsor: e.target.value })}
                 placeholder="Acme Co."
               />
+
+              <div>
+                <label className="block text-sm font-medium text-winter-dark mb-1">
+                  Details
+                </label>
+                <textarea
+                  value={formData.details}
+                  onChange={(e) => setFormData({ ...formData, details: e.target.value })}
+                  placeholder="A short description of this event..."
+                  rows={3}
+                  className="w-full px-3 py-2 border border-winter-gray/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-winter-accent focus:border-transparent resize-y"
+                />
+              </div>
 
               <Input
                 label="Location"

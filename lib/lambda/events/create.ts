@@ -7,6 +7,7 @@ import { successResponse, errorResponse, ErrorCodes } from '../shared/response';
 interface CreateEventRequest {
   name?: string;
   sponsor?: string;
+  details?: string;
   location?: string;
   rulesUrl?: string;
   scoringType?: 'placement' | 'judged' | 'none';
@@ -37,7 +38,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     }
 
     const body: CreateEventRequest = JSON.parse(event.body);
-    const { name, sponsor, location, rulesUrl, scoringType, judgedCategories, scheduledDay, scheduledTime, status } = body;
+    const { name, sponsor, details, location, rulesUrl, scoringType, judgedCategories, scheduledDay, scheduledTime, status } = body;
 
     // Validation
     if (!name || !name.trim()) {
@@ -76,6 +77,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       scoringType: resolvedScoringType,
       name: name.trim(),
       sponsor: sponsor?.trim() || null,
+      details: details?.trim() || null,
       location: location?.trim() || null,
       rulesUrl: rulesUrl?.trim() || null,
       scheduledDay: scheduledDay === 1 || scheduledDay === 2 ? scheduledDay : null,

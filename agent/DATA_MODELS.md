@@ -108,6 +108,7 @@ Attributes:
 - eventId: String (SK)
 - name: String - e.g., "Snowball Toss"
 - sponsor: String - optional sponsor name (e.g., "Acme Co.")
+- details: String - optional short description of the event
 - location: String - e.g., "Backyard"
 - rulesUrl: String - Google Doc URL
 - scoringType: String - "placement" | "judged"

@@ -290,6 +290,7 @@ Create a new event.
 
 **Optional fields:**
 - `sponsor`
+- `details`
 - `location`
 - `rulesUrl`
 - `scoringType` (defaults to `"placement"`)

@@ -185,5 +185,77 @@ describe('Events Update Handler', () => {
     expect(body.success).toBe(false);
     expect(body.error.code).toBe('VALIDATION_ERROR');
   });
+
+  it('should update event details field', async () => {
+    // Mock that the event exists
+    (docClient.send as jest.Mock).mockResolvedValueOnce({
+      Item: {
+        year: 2025,
+        eventId: 'event-1',
+        name: 'Event Alpha',
+        details: null,
+      },
+    });
+    // Mock successful update
+    (docClient.send as jest.Mock).mockResolvedValueOnce({
+      Attributes: {
+        year: 2025,
+        eventId: 'event-1',
+        name: 'Event Alpha',
+        details: 'New description text.',
+        updatedAt: new Date().toISOString(),
+      },
+    });
+
+    const event = {
+      pathParameters: { year: '2025', eventId: 'event-1' },
+      body: JSON.stringify({
+        details: 'New description text.',
+      }),
+    } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
+
+    const result = await handler(event);
+
+    expect(result.statusCode).toBe(200);
+    const body = JSON.parse(result.body);
+    expect(body.success).toBe(true);
+    expect(body.data.details).toBe('New description text.');
+  });
+
+  it('should clear details by setting to null', async () => {
+    // Mock that the event exists with details
+    (docClient.send as jest.Mock).mockResolvedValueOnce({
+      Item: {
+        year: 2025,
+        eventId: 'event-1',
+        name: 'Event Alpha',
+        details: 'Old description',
+      },
+    });
+    // Mock successful update
+    (docClient.send as jest.Mock).mockResolvedValueOnce({
+      Attributes: {
+        year: 2025,
+        eventId: 'event-1',
+        name: 'Event Alpha',
+        details: null,
+        updatedAt: new Date().toISOString(),
+      },
+    });
+
+    const event = {
+      pathParameters: { year: '2025', eventId: 'event-1' },
+      body: JSON.stringify({
+        details: null,
+      }),
+    } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
+
+    const result = await handler(event);
+
+    expect(result.statusCode).toBe(200);
+    const body = JSON.parse(result.body);
+    expect(body.success).toBe(true);
+    expect(body.data.details).toBeNull();
+  });
 });
 

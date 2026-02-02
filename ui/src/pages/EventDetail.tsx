@@ -201,6 +201,12 @@ export const EventDetail: React.FC = () => {
               </div>
             )}
           </div>
+
+          {event.details && (
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <p className="text-winter-gray whitespace-pre-wrap">{event.details}</p>
+            </div>
+          )}
         </CardBody>
       </Card>
 

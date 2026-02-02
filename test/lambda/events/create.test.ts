@@ -28,6 +28,7 @@ describe('Events Create Handler', () => {
       body: JSON.stringify({
         name: 'Event Alpha',
         sponsor: 'Acme Co.',
+        details: 'A fun event for all ages.',
         location: 'Park',
         rulesUrl: 'https://example.com/rules',
         scoringType: 'placement',
@@ -43,6 +44,7 @@ describe('Events Create Handler', () => {
     expect(body.success).toBe(true);
     expect(body.data.name).toBe('Event Alpha');
     expect(body.data.sponsor).toBe('Acme Co.');
+    expect(body.data.details).toBe('A fun event for all ages.');
     expect(body.data.location).toBe('Park');
     expect(body.data.scoringType).toBe('placement');
     expect(body.data.eventId).toBe('event-test-uuid');
@@ -196,6 +198,45 @@ describe('Events Create Handler', () => {
     expect(body.success).toBe(true);
     expect(body.data.name).toBe('Opening Ceremony');
     expect(body.data.scoringType).toBe('none');
+  });
+
+  it('should preserve multi-line details text', async () => {
+    (docClient.send as jest.Mock).mockResolvedValueOnce({});
+
+    const multiLineDetails = 'Line one.\nLine two.\nLine three.';
+    const event = {
+      pathParameters: { year: '2025' },
+      body: JSON.stringify({
+        name: 'Multi-line Event',
+        details: multiLineDetails,
+      }),
+    } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
+
+    const result = await handler(event);
+
+    expect(result.statusCode).toBe(201);
+    const body = JSON.parse(result.body);
+    expect(body.success).toBe(true);
+    expect(body.data.details).toBe(multiLineDetails);
+  });
+
+  it('should store details as null when empty or whitespace', async () => {
+    (docClient.send as jest.Mock).mockResolvedValueOnce({});
+
+    const event = {
+      pathParameters: { year: '2025' },
+      body: JSON.stringify({
+        name: 'No Details Event',
+        details: '   ',
+      }),
+    } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
+
+    const result = await handler(event);
+
+    expect(result.statusCode).toBe(201);
+    const body = JSON.parse(result.body);
+    expect(body.success).toBe(true);
+    expect(body.data.details).toBeNull();
   });
 });
 
