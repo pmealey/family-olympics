@@ -49,22 +49,22 @@ export const AdminEventEdit: React.FC = () => {
       
       try {
         const result = await apiClient.getEvent(currentYear, eventId);
-        if (result) {
-          setEvent(result);
+        if (result.success && result.data) {
+          setEvent(result.data);
           setFormData({
-            name: result.name || '',
-            sponsor: result.sponsor || '',
-            details: result.details || '',
-            location: result.location || '',
-            rulesUrl: result.rulesUrl || '',
-            scoringType: result.scoringType,
-            judgedCategories: result.judgedCategories?.length ? result.judgedCategories : [''],
-            scheduledDay: result.scheduledDay || 0,
-            scheduledTime: result.scheduledTime || '',
-            completed: result.completed || false,
+            name: result.data.name || '',
+            sponsor: result.data.sponsor || '',
+            details: result.data.details || '',
+            location: result.data.location || '',
+            rulesUrl: result.data.rulesUrl || '',
+            scoringType: result.data.scoringType,
+            judgedCategories: result.data.judgedCategories?.length ? result.data.judgedCategories : [''],
+            scheduledDay: result.data.scheduledDay || 0,
+            scheduledTime: result.data.scheduledTime || '',
+            completed: result.data.completed || false,
           });
         } else {
-          setError('Event not found');
+          setError(result.error?.message || 'Event not found');
         }
       } catch (err) {
         setError('Failed to load event');
