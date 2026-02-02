@@ -3,7 +3,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardBody, Button, Input, Select, TeamColorIndicator } from '../../components';
+import { Card, CardHeader, CardBody, Button, Input, Select, TeamColorIndicator, Loading } from '../../components';
 import { useAdmin } from '../../contexts/AdminContext';
 import { apiClient } from '../../lib/api';
 import type { Team } from '../../lib/api';
@@ -12,7 +12,7 @@ import { useMutation } from '../../hooks/useApi';
 type TeamColor = 'green' | 'pink' | 'yellow' | 'orange';
 
 export const AdminTeams: React.FC = () => {
-  const { currentYear, teams, refreshTeams } = useAdmin();
+  const { currentYear, teams, teamsLoading, refreshTeams } = useAdmin();
   
   const [showForm, setShowForm] = useState(false);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
@@ -248,7 +248,9 @@ export const AdminTeams: React.FC = () => {
 
       {/* Teams List */}
       <div className="space-y-4">
-        {teams.length === 0 ? (
+        {teamsLoading ? (
+          <Loading message="Loading teams..." />
+        ) : teams.length === 0 ? (
           <Card>
             <CardBody>
               <div className="text-center py-8">

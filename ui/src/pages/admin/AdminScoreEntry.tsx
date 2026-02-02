@@ -15,7 +15,7 @@ import { useMutation } from '../../hooks/useApi';
 export const AdminScoreEntry: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
-  const { currentYear, events, teams, refreshScores, refreshEvents } = useAdmin();
+  const { currentYear, events, teams, teamsLoading, refreshScores, refreshEvents } = useAdmin();
 
   const [event, setEvent] = useState<Event | null>(null);
   const [eventScores, setEventScores] = useState<Score[]>([]);
@@ -228,8 +228,8 @@ export const AdminScoreEntry: React.FC = () => {
     );
   }
 
-  if (loading) {
-    return <Loading />;
+  if (loading || teamsLoading) {
+    return <Loading message="Loading event data..." />;
   }
 
   if (!event) {

@@ -3,13 +3,13 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardBody, Button, Input } from '../../components';
+import { Card, CardHeader, CardBody, Button, Input, Loading } from '../../components';
 import { useAdmin } from '../../contexts/AdminContext';
 import { apiClient } from '../../lib/api';
 import { useMutation } from '../../hooks/useApi';
 
 export const AdminOlympics: React.FC = () => {
-  const { currentYear, currentOlympics, olympicsYears, refreshOlympics, setCurrentYear, setCurrentOlympics } = useAdmin();
+  const { currentYear, currentOlympics, olympicsYears, olympicsLoading, refreshOlympics, setCurrentYear, setCurrentOlympics } = useAdmin();
   
   const [editMode, setEditMode] = useState(false);
   const [placementPoints, setPlacementPoints] = useState<Record<string, number>>({
@@ -76,6 +76,17 @@ export const AdminOlympics: React.FC = () => {
     }
   };
 
+
+  if (olympicsLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-display font-bold">Olympics Configuration</h2>
+        </div>
+        <Loading message="Loading Olympics configuration..." />
+      </div>
+    );
+  }
 
   if (!currentOlympics && !showNewYearForm) {
     return (

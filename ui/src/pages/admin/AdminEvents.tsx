@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardHeader, CardBody, Button, Input, Select, StatusBadge } from '../../components';
+import { Card, CardHeader, CardBody, Button, Input, Select, StatusBadge, Loading } from '../../components';
 import { useAdmin } from '../../contexts/AdminContext';
 import { apiClient } from '../../lib/api';
 import type { Event } from '../../lib/api';
@@ -14,7 +14,7 @@ type ScoringType = 'placement' | 'judged' | 'none';
 
 export const AdminEvents: React.FC = () => {
   const navigate = useNavigate();
-  const { currentYear, events, refreshEvents } = useAdmin();
+  const { currentYear, events, eventsLoading, refreshEvents } = useAdmin();
   
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -325,7 +325,9 @@ export const AdminEvents: React.FC = () => {
 
       {/* Events List by Day */}
       <div className="space-y-6">
-        {events.length === 0 ? (
+        {eventsLoading ? (
+          <Loading message="Loading events..." />
+        ) : events.length === 0 ? (
           <Card>
             <CardBody>
               <div className="text-center py-8">

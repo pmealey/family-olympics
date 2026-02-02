@@ -5,16 +5,16 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardBody, StatusBadge } from '../../components';
+import { Card, CardBody, StatusBadge, Loading } from '../../components';
 import { useAdmin } from '../../contexts/AdminContext';
 import { apiClient } from '../../lib/api';
 import type { Event, Score, PlacementScore, JudgeScore } from '../../lib/api';
 
 export const AdminScores: React.FC = () => {
   const navigate = useNavigate();
-  const { currentYear, events, refreshEvents } = useAdmin();
+  const { currentYear, events, eventsLoading, refreshEvents } = useAdmin();
   const [eventScoresMap, setEventScoresMap] = useState<Record<string, Score[]>>({});
-  const [loading, setLoading] = useState(true);
+  const [scoresLoading, setScoresLoading] = useState(true);
 
   // Get list of scoreable events (exclude non-scoring events)
   const scoreableEvents = useMemo(() => {
@@ -35,12 +35,15 @@ export const AdminScores: React.FC = () => {
   // Load scores for all scoreable events
   useEffect(() => {
     const loadAllScores = async () => {
+      // Don't load scores until events are loaded
+      if (eventsLoading) return;
+      
       if (!currentYear || scoreableEvents.length === 0) {
-        setLoading(false);
+        setScoresLoading(false);
         return;
       }
 
-      setLoading(true);
+      setScoresLoading(true);
       const scoresMap: Record<string, Score[]> = {};
       
       for (const event of scoreableEvents) {
@@ -51,11 +54,11 @@ export const AdminScores: React.FC = () => {
       }
       
       setEventScoresMap(scoresMap);
-      setLoading(false);
+      setScoresLoading(false);
     };
 
     loadAllScores();
-  }, [currentYear, scoreableEvents]);
+  }, [currentYear, scoreableEvents, eventsLoading]);
 
   // Refresh events when component mounts
   useEffect(() => {
@@ -117,18 +120,17 @@ export const AdminScores: React.FC = () => {
     );
   }
 
+  // Combined loading state: show loading while events OR scores are loading
+  const isLoading = eventsLoading || scoresLoading;
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-display font-bold">Score Events</h2>
       </div>
 
-      {loading ? (
-        <Card>
-          <CardBody>
-            <p className="text-center text-winter-gray py-8">Loading events...</p>
-          </CardBody>
-        </Card>
+      {isLoading ? (
+        <Loading message="Loading events..." />
       ) : scoreableEvents.length === 0 ? (
         <Card>
           <CardBody>

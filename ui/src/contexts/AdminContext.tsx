@@ -30,9 +30,13 @@ interface AdminContextType {
   scores: Score[];
   setScores: (scores: Score[]) => void;
   
-  // Loading states
+  // Loading states (granular for each data type)
   loading: boolean;
   setLoading: (loading: boolean) => void;
+  olympicsLoading: boolean;
+  teamsLoading: boolean;
+  eventsLoading: boolean;
+  scoresLoading: boolean;
   
   // Refresh functions
   refreshOlympics: () => Promise<void>;
@@ -52,44 +56,55 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const [events, setEvents] = useState<Event[]>([]);
   const [scores, setScores] = useState<Score[]>([]);
   const [loading, setLoading] = useState(false);
+  
+  // Granular loading states - start true to indicate initial load pending
+  const [olympicsLoading, setOlympicsLoading] = useState(true);
+  const [teamsLoading, setTeamsLoading] = useState(true);
+  const [eventsLoading, setEventsLoading] = useState(true);
+  const [scoresLoading, setScoresLoading] = useState(true);
 
   // Load current olympics on mount
   useEffect(() => {
     const loadCurrentOlympics = async () => {
+      setOlympicsLoading(true);
       console.log('[AdminContext] Loading current Olympics...');
-      const response = await apiClient.getCurrentOlympics();
-      console.log('[AdminContext] getCurrentOlympics response:', response);
-      
-      if (response.success && response.data) {
-        console.log('[AdminContext] Setting current Olympics:', response.data);
-        setCurrentOlympics(response.data);
-        setCurrentYear(response.data.year);
-      } else {
-        console.warn('[AdminContext] No current Olympics found or error:', response.error);
-        // Try to load all years and use the first one
-        const yearsResponse = await apiClient.listOlympics();
-        console.log('[AdminContext] listOlympics response:', yearsResponse);
+      try {
+        const response = await apiClient.getCurrentOlympics();
+        console.log('[AdminContext] getCurrentOlympics response:', response);
         
-        if (yearsResponse.success && yearsResponse.data?.years && yearsResponse.data.years.length > 0) {
-          setOlympicsYears(yearsResponse.data.years);
-          
-          // Now fetch the full Olympics data for the first year
-          const firstYearNumber = yearsResponse.data.years[0].year;
-          console.log('[AdminContext] Fetching full data for year:', firstYearNumber);
-          
-          const fullYearResponse = await apiClient.getOlympics(firstYearNumber);
-          console.log('[AdminContext] Full year response:', fullYearResponse);
-          
-          if (fullYearResponse.success && fullYearResponse.data) {
-            console.log('[AdminContext] Using year:', fullYearResponse.data);
-            setCurrentOlympics(fullYearResponse.data);
-            setCurrentYear(fullYearResponse.data.year);
-          } else {
-            console.error('[AdminContext] Failed to load full year data');
-          }
+        if (response.success && response.data) {
+          console.log('[AdminContext] Setting current Olympics:', response.data);
+          setCurrentOlympics(response.data);
+          setCurrentYear(response.data.year);
         } else {
-          console.log('[AdminContext] No Olympics years found at all');
+          console.warn('[AdminContext] No current Olympics found or error:', response.error);
+          // Try to load all years and use the first one
+          const yearsResponse = await apiClient.listOlympics();
+          console.log('[AdminContext] listOlympics response:', yearsResponse);
+          
+          if (yearsResponse.success && yearsResponse.data?.years && yearsResponse.data.years.length > 0) {
+            setOlympicsYears(yearsResponse.data.years);
+            
+            // Now fetch the full Olympics data for the first year
+            const firstYearNumber = yearsResponse.data.years[0].year;
+            console.log('[AdminContext] Fetching full data for year:', firstYearNumber);
+            
+            const fullYearResponse = await apiClient.getOlympics(firstYearNumber);
+            console.log('[AdminContext] Full year response:', fullYearResponse);
+            
+            if (fullYearResponse.success && fullYearResponse.data) {
+              console.log('[AdminContext] Using year:', fullYearResponse.data);
+              setCurrentOlympics(fullYearResponse.data);
+              setCurrentYear(fullYearResponse.data.year);
+            } else {
+              console.error('[AdminContext] Failed to load full year data');
+            }
+          } else {
+            console.log('[AdminContext] No Olympics years found at all');
+          }
         }
+      } finally {
+        setOlympicsLoading(false);
       }
     };
     loadCurrentOlympics();
@@ -97,6 +112,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
   const refreshOlympics = async () => {
     setLoading(true);
+    setOlympicsLoading(true);
     try {
       const [yearsResponse, currentResponse] = await Promise.all([
         apiClient.listOlympics(),
@@ -115,13 +131,18 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       }
     } finally {
       setLoading(false);
+      setOlympicsLoading(false);
     }
   };
 
   const refreshTeams = async () => {
-    if (!currentYear) return;
+    if (!currentYear) {
+      setTeamsLoading(false);
+      return;
+    }
     
     setLoading(true);
+    setTeamsLoading(true);
     try {
       const response = await apiClient.listTeams(currentYear);
       if (response.success && response.data) {
@@ -129,13 +150,18 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       }
     } finally {
       setLoading(false);
+      setTeamsLoading(false);
     }
   };
 
   const refreshEvents = async () => {
-    if (!currentYear) return;
+    if (!currentYear) {
+      setEventsLoading(false);
+      return;
+    }
     
     setLoading(true);
+    setEventsLoading(true);
     try {
       const response = await apiClient.listEvents(currentYear);
       if (response.success && response.data) {
@@ -143,13 +169,18 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       }
     } finally {
       setLoading(false);
+      setEventsLoading(false);
     }
   };
 
   const refreshScores = async () => {
-    if (!currentYear) return;
+    if (!currentYear) {
+      setScoresLoading(false);
+      return;
+    }
     
     setLoading(true);
+    setScoresLoading(true);
     try {
       const response = await apiClient.listScores(currentYear);
       if (response.success && response.data) {
@@ -157,6 +188,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       }
     } finally {
       setLoading(false);
+      setScoresLoading(false);
     }
   };
 
@@ -193,6 +225,10 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     setScores,
     loading,
     setLoading,
+    olympicsLoading,
+    teamsLoading,
+    eventsLoading,
+    scoresLoading,
     refreshOlympics,
     refreshTeams,
     refreshEvents,
