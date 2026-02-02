@@ -122,7 +122,7 @@ const JudgeEventCard: React.FC<JudgeEventCardProps> = ({
   teams,
   onScore,
 }) => {
-  const { data: scoresData } = useEventScores(year, event.eventId);
+  const { data: scoresData, loading: scoresLoading } = useEventScores(year, event.eventId);
 
   const scoringStatus = useMemo(() => {
     if (!scoresData?.scores) {
@@ -162,31 +162,42 @@ const JudgeEventCard: React.FC<JudgeEventCardProps> = ({
           {/* Scoring Progress */}
           <div className="space-y-2">
             <p className="text-sm font-medium text-winter-dark">Your scores:</p>
-            <div className="grid grid-cols-1 xs:grid-cols-2 gap-1 sm:gap-2">
-              {scoringStatus.scored.map((team) => (
-                <div
-                  key={team.teamId}
-                  className="flex items-center text-sm text-green-600"
-                >
-                  <span className="mr-2 shrink-0">✓</span>
-                  <span className="truncate">{team.name}</span>
-                </div>
-              ))}
-              {scoringStatus.unscored.map((team) => (
-                <div
-                  key={team.teamId}
-                  className="flex items-center text-sm text-winter-gray"
-                >
-                  <span className="mr-2 shrink-0">○</span>
-                  <span className="truncate">{team.name}</span>
-                </div>
-              ))}
-            </div>
+            {scoresLoading ? (
+              <div className="flex items-center gap-2 text-sm text-winter-gray py-2">
+                <div className="w-4 h-4 border-2 border-winter-gray/30 border-t-winter-blue rounded-full animate-spin" />
+                <span>Loading scores...</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 xs:grid-cols-2 gap-1 sm:gap-2">
+                {scoringStatus.scored.map((team) => (
+                  <div
+                    key={team.teamId}
+                    className="flex items-center text-sm text-green-600"
+                  >
+                    <span className="mr-2 shrink-0">✓</span>
+                    <span className="truncate">{team.name}</span>
+                  </div>
+                ))}
+                {scoringStatus.unscored.map((team) => (
+                  <div
+                    key={team.teamId}
+                    className="flex items-center text-sm text-winter-gray"
+                  >
+                    <span className="mr-2 shrink-0">○</span>
+                    <span className="truncate">{team.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Action Button */}
           <div className="pt-2">
-            {isComplete ? (
+            {scoresLoading ? (
+              <Button fullWidth disabled>
+                Loading...
+              </Button>
+            ) : isComplete ? (
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-sm text-green-600 font-medium">
                   ✓ All teams scored
