@@ -159,7 +159,7 @@ export const EventDetail: React.FC = () => {
         <CardBody>
           <div className="flex items-start justify-between mb-4">
             <h2 className="text-2xl font-display font-bold">{event.name || 'Untitled Event'}</h2>
-            <StatusBadge status={event.status} />
+            <StatusBadge completed={event.completed} />
           </div>
 
           <div className="space-y-2 text-winter-gray">
@@ -210,8 +210,8 @@ export const EventDetail: React.FC = () => {
         </CardBody>
       </Card>
 
-      {/* Results Section - only show for scoring events */}
-      {event.scoringType !== 'none' && event.status === 'completed' && placementScores.length > 0 && (
+      {/* Results Section - show for completed scoring events with scores */}
+      {event.scoringType !== 'none' && event.completed && placementScores.length > 0 && (
         <Card>
           <CardBody>
             <h3 className="text-xl font-display font-bold mb-4">Results</h3>
@@ -252,32 +252,17 @@ export const EventDetail: React.FC = () => {
         </Card>
       )}
 
-      {/* In Progress Message - only show for scoring events */}
-      {event.scoringType !== 'none' && event.status === 'in-progress' && (
+      {/* Awaiting Results Message - show for incomplete scoring events */}
+      {event.scoringType !== 'none' && !event.completed && (
         <Card>
           <CardBody>
             <div className="text-center py-8">
-              <div className="text-4xl mb-4">⏱️</div>
+              <div className="text-4xl mb-4">⏳</div>
               <h3 className="text-xl font-display font-bold mb-2">
-                Scoring in Progress
+                Awaiting Results
               </h3>
               <p className="text-winter-gray">
                 Results will appear here once scoring is complete
-              </p>
-            </div>
-          </CardBody>
-        </Card>
-      )}
-
-      {/* Upcoming Message - only show for scoring events */}
-      {event.scoringType !== 'none' && event.status === 'upcoming' && (
-        <Card>
-          <CardBody>
-            <div className="text-center py-8">
-              <div className="text-4xl mb-4">📅</div>
-              <h3 className="text-xl font-display font-bold mb-2">Upcoming Event</h3>
-              <p className="text-winter-gray">
-                This event hasn't started yet. Check back later!
               </p>
             </div>
           </CardBody>

@@ -35,7 +35,7 @@ describe('Events Update Handler', () => {
         name: 'New Name',
         location: 'New Location',
         scoringType: 'placement',
-        status: 'in-progress',
+        completed: true,
         updatedAt: new Date().toISOString(),
       },
     });
@@ -45,7 +45,7 @@ describe('Events Update Handler', () => {
       body: JSON.stringify({
         name: 'New Name',
         location: 'New Location',
-        status: 'in-progress',
+        completed: true,
       }),
     } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
 
@@ -55,7 +55,7 @@ describe('Events Update Handler', () => {
     const body = JSON.parse(result.body);
     expect(body.success).toBe(true);
     expect(body.data.name).toBe('New Name');
-    expect(body.data.status).toBe('in-progress');
+    expect(body.data.completed).toBe(true);
 
     // Verify GetCommand and UpdateCommand were called
     expect(docClient.send).toHaveBeenNthCalledWith(1, expect.any(GetCommand));
@@ -80,29 +80,40 @@ describe('Events Update Handler', () => {
     expect(body.error.code).toBe('NOT_FOUND');
   });
 
-  it('should return 400 if status is invalid', async () => {
+  it('should update completed field to false', async () => {
     // Mock that the event exists
     (docClient.send as jest.Mock).mockResolvedValueOnce({
       Item: {
         year: 2025,
         eventId: 'event-1',
         name: 'Event Alpha',
+        completed: true,
+      },
+    });
+    // Mock successful update
+    (docClient.send as jest.Mock).mockResolvedValueOnce({
+      Attributes: {
+        year: 2025,
+        eventId: 'event-1',
+        name: 'Event Alpha',
+        completed: false,
+        updatedAt: new Date().toISOString(),
       },
     });
 
     const event = {
       pathParameters: { year: '2025', eventId: 'event-1' },
       body: JSON.stringify({
-        status: 'invalid-status',
+        completed: false,
       }),
     } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
 
     const result = await handler(event);
 
-    expect(result.statusCode).toBe(400);
+    expect(result.statusCode).toBe(200);
     const body = JSON.parse(result.body);
-    expect(body.success).toBe(false);
-    expect(body.error.code).toBe('VALIDATION_ERROR');
+    expect(body.success).toBe(true);
+    expect(body.data.completed).toBe(false);
   });
 
   it('should handle DynamoDB errors gracefully', async () => {

@@ -31,14 +31,15 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     let events = result.Items || [];
 
     // Apply filters from query parameters
-    const { day, status } = event.queryStringParameters || {};
+    const { day, completed } = event.queryStringParameters || {};
 
     if (day) {
       events = events.filter((e) => e.scheduledDay === parseInt(day));
     }
 
-    if (status) {
-      events = events.filter((e) => e.status === status);
+    if (completed !== undefined) {
+      const isCompleted = completed === 'true';
+      events = events.filter((e) => (e.completed === true) === isCompleted);
     }
 
     // Sort by scheduledTime

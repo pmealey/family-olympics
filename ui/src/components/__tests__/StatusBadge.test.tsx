@@ -2,37 +2,31 @@ import { render, screen } from '@testing-library/react';
 import { StatusBadge } from '../StatusBadge';
 
 describe('StatusBadge', () => {
-  it('renders upcoming status', () => {
-    render(<StatusBadge status="upcoming" />);
-    expect(screen.getByText('UPCOMING')).toBeInTheDocument();
+  it('renders nothing when completed is false', () => {
+    const { container } = render(<StatusBadge completed={false} />);
+    expect(container.firstChild).toBeNull();
   });
 
-  it('renders in-progress status', () => {
-    render(<StatusBadge status="in-progress" />);
-    expect(screen.getByText('IN PROGRESS')).toBeInTheDocument();
+  it('renders nothing when completed is undefined', () => {
+    const { container } = render(<StatusBadge />);
+    expect(container.firstChild).toBeNull();
   });
 
-  it('renders completed status', () => {
-    render(<StatusBadge status="completed" />);
+  it('renders completed badge when completed is true', () => {
+    render(<StatusBadge completed={true} />);
     expect(screen.getByText('COMPLETED ✓')).toBeInTheDocument();
   });
 
-  it('applies pulse-subtle to in-progress status', () => {
-    render(<StatusBadge status="in-progress" />);
-    const badge = screen.getByText('IN PROGRESS');
-    expect(badge.className).toContain('pulse-subtle');
-  });
-
-  it('applies correct color classes for upcoming', () => {
-    render(<StatusBadge status="upcoming" />);
-    const badge = screen.getByText('UPCOMING');
-    expect(badge.className).toContain('bg-gray-200');
-  });
-
   it('applies correct color classes for completed', () => {
-    render(<StatusBadge status="completed" />);
+    render(<StatusBadge completed={true} />);
     const badge = screen.getByText('COMPLETED ✓');
     expect(badge.className).toContain('bg-green-100');
+  });
+
+  it('applies custom className', () => {
+    render(<StatusBadge completed={true} className="custom-class" />);
+    const badge = screen.getByText('COMPLETED ✓');
+    expect(badge.className).toContain('custom-class');
   });
 });
 

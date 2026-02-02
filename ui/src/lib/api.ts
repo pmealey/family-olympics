@@ -44,7 +44,7 @@ export interface Event {
   judgedCategories?: string[] | null;
   scheduledDay?: number | null;
   scheduledTime?: string | null;
-  status: 'upcoming' | 'in-progress' | 'completed';
+  completed?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -207,11 +207,11 @@ class ApiClient {
   }
 
   // Events endpoints
-  async listEvents(year: number, filters?: { day?: number; status?: string }) {
+  async listEvents(year: number, filters?: { day?: number; completed?: boolean }) {
     let endpoint = `/olympics/${year}/events`;
     const params = new URLSearchParams();
     if (filters?.day) params.append('day', filters.day.toString());
-    if (filters?.status) params.append('status', filters.status);
+    if (filters?.completed !== undefined) params.append('completed', filters.completed.toString());
     if (params.toString()) endpoint += `?${params.toString()}`;
 
     return this.request<{ events: Event[] }>(endpoint);
@@ -254,7 +254,7 @@ class ApiClient {
       judgedCategories?: string[] | null;
       scheduledDay?: number | null;
       scheduledTime?: string | null;
-      status?: 'upcoming' | 'in-progress' | 'completed';
+      completed?: boolean;
     }
   ) {
     return this.request<Event>(`/olympics/${year}/events/${eventId}`, {

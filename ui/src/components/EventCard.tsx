@@ -96,7 +96,7 @@ export const EventCard: React.FC<EventCardProps> = ({
             </div>
             
             <div className="ml-4">
-              <StatusBadge status={event.status} />
+              <StatusBadge completed={event.completed} />
             </div>
           </div>
         </CardBody>

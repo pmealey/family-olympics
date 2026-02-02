@@ -24,7 +24,7 @@ describe('Events List Handler', () => {
         name: 'Event Alpha',
         location: 'Park',
         scoringType: 'placement',
-        status: 'upcoming',
+        completed: false,
         scheduledTime: '10:00',
       },
       {
@@ -33,7 +33,7 @@ describe('Events List Handler', () => {
         name: 'Event Beta',
         location: 'Stadium',
         scoringType: 'judged',
-        status: 'completed',
+        completed: true,
         scheduledTime: '14:00',
       },
     ];
@@ -94,20 +94,20 @@ describe('Events List Handler', () => {
     expect(body.data.events[0].scheduledDay).toBe(1);
   });
 
-  it('should filter events by status', async () => {
+  it('should filter events by completed status', async () => {
     const mockEvents = [
       {
         year: 2025,
         eventId: 'event-1',
         name: 'Event Alpha',
-        status: 'upcoming',
+        completed: false,
         scheduledTime: '10:00',
       },
       {
         year: 2025,
         eventId: 'event-2',
         name: 'Event Beta',
-        status: 'completed',
+        completed: true,
         scheduledTime: '14:00',
       },
     ];
@@ -118,7 +118,7 @@ describe('Events List Handler', () => {
 
     const event = {
       pathParameters: { year: '2025' },
-      queryStringParameters: { status: 'upcoming' },
+      queryStringParameters: { completed: 'true' },
     } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
 
     const result = await handler(event);
@@ -127,7 +127,7 @@ describe('Events List Handler', () => {
     const body = JSON.parse(result.body);
     expect(body.success).toBe(true);
     expect(body.data.events).toHaveLength(1);
-    expect(body.data.events[0].status).toBe('upcoming');
+    expect(body.data.events[0].completed).toBe(true);
   });
 
   it('should return 400 if year parameter is missing', async () => {

@@ -53,7 +53,7 @@ describe('AdminEventEdit', () => {
     location: 'Backyard',
     rulesUrl: 'https://example.com/rules',
     scoringType: 'placement',
-    status: 'upcoming',
+    completed: false,
     scheduledDay: 1,
     scheduledTime: '14:30',
   };
@@ -355,8 +355,8 @@ describe('AdminEventEdit', () => {
     });
   });
 
-  describe('Status Selection', () => {
-    it('should display status select with correct options', async () => {
+  describe('Completed Checkbox', () => {
+    it('should display completed checkbox', async () => {
       render(
         <RouterWrapper>
           <AdminEventEdit />
@@ -364,15 +364,11 @@ describe('AdminEventEdit', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Status')).toBeInTheDocument();
+        expect(screen.getByLabelText('Event Completed')).toBeInTheDocument();
       });
-
-      // Find the status select by its displayed value
-      const statusSelect = screen.getByDisplayValue('Upcoming');
-      expect(statusSelect).toBeInTheDocument();
     });
 
-    it('should update status when changed', async () => {
+    it('should toggle completed when checkbox is clicked', async () => {
       render(
         <RouterWrapper>
           <AdminEventEdit />
@@ -380,13 +376,14 @@ describe('AdminEventEdit', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByDisplayValue('Upcoming')).toBeInTheDocument();
+        expect(screen.getByLabelText('Event Completed')).toBeInTheDocument();
       });
 
-      const statusSelect = screen.getByDisplayValue('Upcoming');
-      fireEvent.change(statusSelect, { target: { value: 'in-progress' } });
+      const checkbox = screen.getByLabelText('Event Completed') as HTMLInputElement;
+      expect(checkbox.checked).toBe(false);
 
-      expect(statusSelect).toHaveValue('in-progress');
+      fireEvent.click(checkbox);
+      expect(checkbox.checked).toBe(true);
     });
   });
 

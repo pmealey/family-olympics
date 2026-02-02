@@ -17,7 +17,6 @@ describe('EventCard', () => {
     location: 'Backyard',
     rulesUrl: 'https://example.com/rules',
     scoringType: 'placement',
-    status: 'upcoming',
     scheduledDay: 1,
   };
 
@@ -157,15 +156,24 @@ describe('EventCard', () => {
       expect(screen.queryByText(/Day 1/)).not.toBeInTheDocument();
     });
 
-    it('should display status badge', () => {
+    it('should display completed badge when event is completed', () => {
+      render(
+        <RouterWrapper>
+          <EventCard event={{ ...baseEvent, completed: true }} />
+        </RouterWrapper>
+      );
+
+      expect(screen.getByText(/COMPLETED/i)).toBeInTheDocument();
+    });
+
+    it('should not display badge when event is not completed', () => {
       render(
         <RouterWrapper>
           <EventCard event={baseEvent} />
         </RouterWrapper>
       );
 
-      // StatusBadge component should be rendered (exact text depends on implementation)
-      expect(screen.getByText(/upcoming/i)).toBeInTheDocument();
+      expect(screen.queryByText(/COMPLETED/i)).not.toBeInTheDocument();
     });
 
     it('should display sponsor when provided', () => {

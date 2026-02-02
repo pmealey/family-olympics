@@ -206,6 +206,30 @@ export const JudgeScoreEntry: React.FC = () => {
     );
   }
 
+  // Check if event is completed - judges cannot score completed events
+  if (event.completed) {
+    return (
+      <div className="space-y-6">
+        <Button variant="ghost" onClick={handleBack}>
+          ← Back
+        </Button>
+        <Card>
+          <CardBody>
+            <div className="text-center py-8">
+              <span className="text-6xl mb-4 block">✅</span>
+              <h3 className="text-xl font-display font-bold mb-2">
+                Event Completed
+              </h3>
+              <p className="text-winter-gray">
+                This event has been completed and can no longer be scored.
+              </p>
+            </div>
+          </CardBody>
+        </Card>
+      </div>
+    );
+  }
+
   // Show aggregate view if all teams are scored or user requested it
   if (showAggregates || teamsToScore.length === 0) {
     return (

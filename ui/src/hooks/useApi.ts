@@ -81,7 +81,7 @@ export function useTeam(year: number | null, teamId: string | null) {
 // Events hooks
 export function useEvents(
   year: number | null,
-  filters?: { day?: number; status?: string }
+  filters?: { day?: number; completed?: boolean }
 ) {
   return useAsync(
     () => apiClient.listEvents(year!, filters),

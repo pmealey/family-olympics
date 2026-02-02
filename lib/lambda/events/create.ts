@@ -14,7 +14,6 @@ interface CreateEventRequest {
   judgedCategories?: string[];
   scheduledDay?: number;
   scheduledTime?: string;
-  status?: 'upcoming' | 'in-progress' | 'completed';
 }
 
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
@@ -38,7 +37,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     }
 
     const body: CreateEventRequest = JSON.parse(event.body);
-    const { name, sponsor, details, location, rulesUrl, scoringType, judgedCategories, scheduledDay, scheduledTime, status } = body;
+    const { name, sponsor, details, location, rulesUrl, scoringType, judgedCategories, scheduledDay, scheduledTime } = body;
 
     // Validation
     if (!name || !name.trim()) {
@@ -58,17 +57,6 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       );
     }
 
-    if (status !== undefined) {
-      const validStatuses = ['upcoming', 'in-progress', 'completed'] as const;
-      if (!validStatuses.includes(status)) {
-        return errorResponse(
-          ErrorCodes.VALIDATION_ERROR.code,
-          `status must be one of: ${validStatuses.join(', ')}`,
-          ErrorCodes.VALIDATION_ERROR.status
-        );
-      }
-    }
-
     // Create event
     const now = new Date().toISOString();
     const eventData: any = {
@@ -82,7 +70,6 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       rulesUrl: rulesUrl?.trim() || null,
       scheduledDay: scheduledDay === 1 || scheduledDay === 2 ? scheduledDay : null,
       scheduledTime: scheduledTime?.trim() || null,
-      status: status || 'upcoming',
       createdAt: now,
       updatedAt: now,
     };

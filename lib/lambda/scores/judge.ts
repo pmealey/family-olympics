@@ -1,6 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { PutCommand } from '@aws-sdk/lib-dynamodb';
-import { docClient, SCORES_TABLE } from '../shared/db';
+import { PutCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
+import { docClient, SCORES_TABLE, EVENTS_TABLE } from '../shared/db';
 import { successResponse, errorResponse, ErrorCodes } from '../shared/response';
 
 interface SubmitJudgeScoreRequest {
@@ -36,6 +36,33 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       return errorResponse(
         ErrorCodes.VALIDATION_ERROR.code,
         'judgeName, teamId, and categoryScores are required',
+        ErrorCodes.VALIDATION_ERROR.status
+      );
+    }
+
+    // Check if the event is completed - judges cannot score completed events
+    const eventResult = await docClient.send(
+      new GetCommand({
+        TableName: EVENTS_TABLE,
+        Key: {
+          year: parseInt(year),
+          eventId,
+        },
+      })
+    );
+
+    if (!eventResult.Item) {
+      return errorResponse(
+        ErrorCodes.NOT_FOUND.code,
+        `Event ${eventId} not found`,
+        ErrorCodes.NOT_FOUND.status
+      );
+    }
+
+    if (eventResult.Item.completed === true) {
+      return errorResponse(
+        ErrorCodes.VALIDATION_ERROR.code,
+        'Cannot submit scores for a completed event',
         ErrorCodes.VALIDATION_ERROR.status
       );
     }

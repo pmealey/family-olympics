@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useJudge } from '../contexts';
 import { useCurrentOlympics, useEvents, useTeams, useEventScores } from '../hooks/useApi';
-import { Card, CardBody, Button, Loading, StatusBadge } from '../components';
+import { Card, CardBody, Button, Loading } from '../components';
 import type { Event, JudgeScore } from '../lib/api';
 
 export const JudgeEvents: React.FC = () => {
@@ -14,13 +14,15 @@ export const JudgeEvents: React.FC = () => {
   const { judgeName, clearJudgeName } = useJudge();
   const { data: olympics, loading: olympicsLoading } = useCurrentOlympics();
   const { data: eventsData, loading: eventsLoading } = useEvents(
-    olympics?.year || null,
-    { status: 'in-progress' }
+    olympics?.year || null
   );
   const { data: teamsData } = useTeams(olympics?.year || null);
 
   const judgedEvents = useMemo(() => {
-    return eventsData?.events?.filter((event) => event.scoringType === 'judged') || [];
+    // Show judged events that are NOT completed
+    return eventsData?.events?.filter((event) => 
+      event.scoringType === 'judged' && !event.completed
+    ) || [];
   }, [eventsData]);
 
   const handleEditName = () => {
@@ -82,7 +84,7 @@ export const JudgeEvents: React.FC = () => {
                   No events are currently available for judging.
                 </p>
                 <p className="text-sm text-winter-gray mt-2">
-                  Check back when events are in progress!
+                  All judged events have been completed.
                 </p>
               </div>
             </CardBody>
@@ -154,7 +156,6 @@ const JudgeEventCard: React.FC<JudgeEventCardProps> = ({
                 <p className="text-sm text-winter-gray mt-1">📍 {event.location}</p>
               )}
             </div>
-            <StatusBadge status={event.status} />
           </div>
 
           {/* Scoring Progress */}

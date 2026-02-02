@@ -13,7 +13,7 @@ interface UpdateEventRequest {
   judgedCategories?: string[];
   scheduledDay?: number;
   scheduledTime?: string;
-  status?: 'upcoming' | 'in-progress' | 'completed';
+  completed?: boolean;
 }
 
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
@@ -118,18 +118,9 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       attributeValues[':scheduledTime'] = body.scheduledTime;
     }
 
-    if (body.status !== undefined) {
-      const validStatuses = ['upcoming', 'in-progress', 'completed'];
-      if (!validStatuses.includes(body.status)) {
-        return errorResponse(
-          ErrorCodes.VALIDATION_ERROR.code,
-          `status must be one of: ${validStatuses.join(', ')}`,
-          ErrorCodes.VALIDATION_ERROR.status
-        );
-      }
-      updates.push('#status = :status');
-      attributeValues[':status'] = body.status;
-      attributeNames['#status'] = 'status';
+    if (body.completed !== undefined) {
+      updates.push('completed = :completed');
+      attributeValues[':completed'] = body.completed;
     }
 
     updates.push('updatedAt = :now');

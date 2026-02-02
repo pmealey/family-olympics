@@ -11,7 +11,6 @@ import type { Event } from '../../lib/api';
 import { useMutation } from '../../hooks/useApi';
 
 type ScoringType = 'placement' | 'judged' | 'none';
-type EventStatus = 'upcoming' | 'in-progress' | 'completed';
 
 export const AdminEventEdit: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
@@ -32,7 +31,7 @@ export const AdminEventEdit: React.FC = () => {
     judgedCategories: [''],
     scheduledDay: 1,
     scheduledTime: '',
-    status: 'upcoming' as EventStatus,
+    completed: false,
   });
 
   const { mutate: updateEvent, loading: updateLoading } = useMutation(
@@ -62,7 +61,7 @@ export const AdminEventEdit: React.FC = () => {
             judgedCategories: result.judgedCategories?.length ? result.judgedCategories : [''],
             scheduledDay: result.scheduledDay || 0,
             scheduledTime: result.scheduledTime || '',
-            status: result.status,
+            completed: result.completed || false,
           });
         } else {
           setError('Event not found');
@@ -99,7 +98,7 @@ export const AdminEventEdit: React.FC = () => {
       details: trimOrNull(formData.details),
       location: trimOrNull(formData.location),
       rulesUrl: trimOrNull(formData.rulesUrl),
-      status: formData.status,
+      completed: formData.completed,
       scheduledDay:
         formData.scheduledDay === 1 || formData.scheduledDay === 2
           ? formData.scheduledDay
@@ -299,16 +298,18 @@ export const AdminEventEdit: React.FC = () => {
               />
             </div>
 
-            <Select
-              label="Status"
-              value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value as EventStatus })}
-              options={[
-                { value: 'upcoming', label: 'Upcoming' },
-                { value: 'in-progress', label: 'In Progress' },
-                { value: 'completed', label: 'Completed' },
-              ]}
-            />
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="completed"
+                checked={formData.completed}
+                onChange={(e) => setFormData({ ...formData, completed: e.target.checked })}
+                className="w-5 h-5 rounded border-winter-gray/30 text-winter-accent focus:ring-winter-accent"
+              />
+              <label htmlFor="completed" className="text-sm font-medium text-winter-dark">
+                Event Completed
+              </label>
+            </div>
 
             <div className="flex gap-2 pt-4 border-t">
               <Button

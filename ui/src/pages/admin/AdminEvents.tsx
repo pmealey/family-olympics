@@ -11,7 +11,6 @@ import type { Event } from '../../lib/api';
 import { useMutation } from '../../hooks/useApi';
 
 type ScoringType = 'placement' | 'judged' | 'none';
-type EventStatus = 'upcoming' | 'in-progress' | 'completed';
 
 export const AdminEvents: React.FC = () => {
   const navigate = useNavigate();
@@ -28,7 +27,6 @@ export const AdminEvents: React.FC = () => {
     judgedCategories: [''],
     scheduledDay: 1,
     scheduledTime: '',
-    status: 'upcoming' as EventStatus,
   });
 
   useEffect(() => {
@@ -62,7 +60,6 @@ export const AdminEvents: React.FC = () => {
     const data: any = {
       scoringType: formData.scoringType,
       name: formData.name.trim(),
-      status: formData.status,
     };
 
     const categories =
@@ -103,10 +100,10 @@ export const AdminEvents: React.FC = () => {
     }
   };
 
-  const handleStatusChange = async (event: Event, newStatus: EventStatus) => {
+  const handleToggleComplete = async (event: Event) => {
     if (!currentYear) return;
     
-    await updateEventStatus(currentYear, event.eventId, { status: newStatus });
+    await updateEventStatus(currentYear, event.eventId, { completed: !event.completed });
     await refreshEvents();
   };
 
@@ -121,7 +118,6 @@ export const AdminEvents: React.FC = () => {
       judgedCategories: [''],
       scheduledDay: 1,
       scheduledTime: '',
-      status: 'upcoming',
     });
   };
 
@@ -304,17 +300,6 @@ export const AdminEvents: React.FC = () => {
                 />
               </div>
 
-              <Select
-                label="Status"
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value as EventStatus })}
-                options={[
-                  { value: 'upcoming', label: 'Upcoming' },
-                  { value: 'in-progress', label: 'In Progress' },
-                  { value: 'completed', label: 'Completed' },
-                ]}
-              />
-
               <div className="flex gap-2 pt-4 border-t">
                 <Button
                   onClick={handleSubmit}
@@ -375,7 +360,7 @@ export const AdminEvents: React.FC = () => {
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                               <h4 className="text-lg font-display font-bold">{event.name || 'Untitled Event'}</h4>
-                              <StatusBadge status={event.status} />
+                              <StatusBadge completed={event.completed} />
                             </div>
                             
                             <div className="text-winter-gray text-sm space-y-1">
@@ -399,25 +384,13 @@ export const AdminEvents: React.FC = () => {
                               Edit
                             </Button>
                             
-                            {event.status !== 'in-progress' && (
-                              <Button
-                                variant="secondary"
-                                size="sm"
-                                onClick={() => handleStatusChange(event, 'in-progress')}
-                              >
-                                Start
-                              </Button>
-                            )}
-                            
-                            {event.status !== 'completed' && (
-                              <Button
-                                variant="secondary"
-                                size="sm"
-                                onClick={() => handleStatusChange(event, 'completed')}
-                              >
-                                Complete
-                              </Button>
-                            )}
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => handleToggleComplete(event)}
+                            >
+                              {event.completed ? 'Uncomplete' : 'Complete'}
+                            </Button>
                             
                             <Button
                               variant="danger"
