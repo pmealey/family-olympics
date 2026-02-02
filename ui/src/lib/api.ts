@@ -36,6 +36,7 @@ export interface Event {
   year: number;
   eventId: string;
   name?: string | null;
+  sponsor?: string | null;
   location?: string | null;
   rulesUrl?: string | null;
   scoringType: 'placement' | 'judged';
@@ -224,6 +225,7 @@ class ApiClient {
     data: {
       name: string;
       scoringType?: 'placement' | 'judged';
+      sponsor?: string | null;
       location?: string | null;
       rulesUrl?: string | null;
       judgedCategories?: string[] | null;
@@ -242,6 +244,7 @@ class ApiClient {
     eventId: string,
     data: {
       name?: string | null;
+      sponsor?: string | null;
       location?: string | null;
       rulesUrl?: string | null;
       scoringType?: 'placement' | 'judged';

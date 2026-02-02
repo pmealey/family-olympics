@@ -55,6 +55,13 @@ export const EventCard: React.FC<EventCardProps> = ({
               </div>
               
               <div className="space-y-1 text-sm text-winter-gray">
+                {event.sponsor && (
+                  <div className="flex items-center space-x-2">
+                    <span>🤝</span>
+                    <span>Sponsored by {event.sponsor}</span>
+                  </div>
+                )}
+
                 {hasDateRow && (
                   <div className="flex items-center space-x-2">
                     <span>🕐</span>

@@ -163,6 +163,13 @@ export const EventDetail: React.FC = () => {
           </div>
 
           <div className="space-y-2 text-winter-gray">
+            {event.sponsor && (
+              <div className="flex items-center space-x-2">
+                <span>🤝</span>
+                <span>Sponsored by {event.sponsor}</span>
+              </div>
+            )}
+
             {hasDateRow && (
               <div className="flex items-center space-x-2">
                 <span>📅</span>

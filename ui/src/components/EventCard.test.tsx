@@ -167,6 +167,26 @@ describe('EventCard', () => {
       // StatusBadge component should be rendered (exact text depends on implementation)
       expect(screen.getByText(/upcoming/i)).toBeInTheDocument();
     });
+
+    it('should display sponsor when provided', () => {
+      render(
+        <RouterWrapper>
+          <EventCard event={{ ...baseEvent, sponsor: 'Acme Co.' }} />
+        </RouterWrapper>
+      );
+
+      expect(screen.getByText(/Sponsored by Acme Co\./)).toBeInTheDocument();
+    });
+
+    it('should not display sponsor row when missing', () => {
+      render(
+        <RouterWrapper>
+          <EventCard event={{ ...baseEvent, sponsor: null }} />
+        </RouterWrapper>
+      );
+
+      expect(screen.queryByText(/Sponsored by/i)).not.toBeInTheDocument();
+    });
   });
 
   describe('Scoring Type Display', () => {

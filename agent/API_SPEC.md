@@ -289,6 +289,7 @@ Create a new event.
 - `name`
 
 **Optional fields:**
+- `sponsor`
 - `location`
 - `rulesUrl`
 - `scoringType` (defaults to `"placement"`)
@@ -308,6 +309,7 @@ Create a new event.
 ```json
 {
   "name": "Snowball Toss",
+  "sponsor": "Acme Co.",
   "location": "Backyard",
   "rulesUrl": "https://docs.google.com/...",
   "scoringType": "placement",

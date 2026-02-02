@@ -5,6 +5,7 @@ import { successResponse, errorResponse, ErrorCodes } from '../shared/response';
 
 interface UpdateEventRequest {
   name?: string;
+  sponsor?: string | null;
   location?: string;
   rulesUrl?: string;
   scoringType?: 'placement' | 'judged';
@@ -66,6 +67,11 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       updates.push('#name = :name');
       attributeValues[':name'] = body.name;
       attributeNames['#name'] = 'name';
+    }
+
+    if (body.sponsor !== undefined) {
+      updates.push('sponsor = :sponsor');
+      attributeValues[':sponsor'] = body.sponsor;
     }
 
     if (body.location !== undefined) {

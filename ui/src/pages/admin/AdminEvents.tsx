@@ -19,6 +19,7 @@ export const AdminEvents: React.FC = () => {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [formData, setFormData] = useState({
     name: '',
+    sponsor: '',
     location: '',
     rulesUrl: '',
     scoringType: 'placement' as ScoringType,
@@ -70,6 +71,7 @@ export const AdminEvents: React.FC = () => {
     if (editingEvent) {
       // For updates, explicitly send nulls so fields can be cleared.
       data.name = formData.name.trim();
+      data.sponsor = trimOrNull(formData.sponsor);
       data.location = trimOrNull(formData.location);
       data.rulesUrl = trimOrNull(formData.rulesUrl);
       data.status = formData.status;
@@ -83,6 +85,7 @@ export const AdminEvents: React.FC = () => {
     } else {
       // For creates, only send fields that are present.
       data.name = formData.name.trim();
+      if (formData.sponsor.trim()) data.sponsor = formData.sponsor.trim();
       if (formData.location.trim()) data.location = formData.location.trim();
       if (formData.rulesUrl.trim()) data.rulesUrl = formData.rulesUrl.trim();
       if (formData.scheduledDay === 1 || formData.scheduledDay === 2) {
@@ -135,6 +138,7 @@ export const AdminEvents: React.FC = () => {
   const resetForm = () => {
     setFormData({
       name: '',
+      sponsor: '',
       location: '',
       rulesUrl: '',
       scoringType: 'placement',
@@ -149,6 +153,7 @@ export const AdminEvents: React.FC = () => {
     setEditingEvent(event);
     setFormData({
       name: event.name || '',
+      sponsor: event.sponsor || '',
       location: event.location || '',
       rulesUrl: event.rulesUrl || '',
       scoringType: event.scoringType,
@@ -241,6 +246,13 @@ export const AdminEvents: React.FC = () => {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Snowball Toss"
+              />
+
+              <Input
+                label="Sponsor"
+                value={formData.sponsor}
+                onChange={(e) => setFormData({ ...formData, sponsor: e.target.value })}
+                placeholder="Acme Co."
               />
 
               <Input

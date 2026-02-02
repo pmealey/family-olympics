@@ -27,6 +27,7 @@ describe('Events Create Handler', () => {
       pathParameters: { year: '2025' },
       body: JSON.stringify({
         name: 'Event Alpha',
+        sponsor: 'Acme Co.',
         location: 'Park',
         rulesUrl: 'https://example.com/rules',
         scoringType: 'placement',
@@ -41,6 +42,7 @@ describe('Events Create Handler', () => {
     const body = JSON.parse(result.body);
     expect(body.success).toBe(true);
     expect(body.data.name).toBe('Event Alpha');
+    expect(body.data.sponsor).toBe('Acme Co.');
     expect(body.data.location).toBe('Park');
     expect(body.data.scoringType).toBe('placement');
     expect(body.data.eventId).toBe('event-test-uuid');
