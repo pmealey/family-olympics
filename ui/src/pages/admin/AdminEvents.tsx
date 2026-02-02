@@ -3,6 +3,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardBody, Button, Input, Select, StatusBadge } from '../../components';
 import { useAdmin } from '../../contexts/AdminContext';
 import { apiClient } from '../../lib/api';
@@ -13,10 +14,10 @@ type ScoringType = 'placement' | 'judged' | 'none';
 type EventStatus = 'upcoming' | 'in-progress' | 'completed';
 
 export const AdminEvents: React.FC = () => {
+  const navigate = useNavigate();
   const { currentYear, events, refreshEvents } = useAdmin();
   
   const [showForm, setShowForm] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     sponsor: '',
@@ -40,7 +41,7 @@ export const AdminEvents: React.FC = () => {
     (year: number, data: any) => apiClient.createEvent(year, data)
   );
 
-  const { mutate: updateEvent, loading: updateLoading } = useMutation(
+  const { mutate: updateEventStatus } = useMutation(
     (year: number, eventId: string, data: any) =>
       apiClient.updateEvent(year, eventId, data)
   );
@@ -53,8 +54,6 @@ export const AdminEvents: React.FC = () => {
   const handleSubmit = async () => {
     if (!currentYear) return;
 
-    const trimOrNull = (value: string) => (value.trim() ? value.trim() : null);
-
     if (!formData.name.trim()) {
       alert('Please provide an event name');
       return;
@@ -62,6 +61,8 @@ export const AdminEvents: React.FC = () => {
 
     const data: any = {
       scoringType: formData.scoringType,
+      name: formData.name.trim(),
+      status: formData.status,
     };
 
     const categories =
@@ -69,54 +70,25 @@ export const AdminEvents: React.FC = () => {
         ? formData.judgedCategories.map((c) => c.trim()).filter(Boolean)
         : [];
 
-    if (editingEvent) {
-      // For updates, explicitly send nulls so fields can be cleared.
-      data.name = formData.name.trim();
-      data.sponsor = trimOrNull(formData.sponsor);
-      data.details = trimOrNull(formData.details);
-      data.location = trimOrNull(formData.location);
-      data.rulesUrl = trimOrNull(formData.rulesUrl);
-      data.status = formData.status;
-      data.scheduledDay =
-        formData.scheduledDay === 1 || formData.scheduledDay === 2
-          ? formData.scheduledDay
-          : null;
-      data.scheduledTime = trimOrNull(formData.scheduledTime);
-      data.judgedCategories =
-        formData.scoringType === 'judged' ? (categories.length > 0 ? categories : null) : null;
-    } else {
-      // For creates, only send fields that are present.
-      data.name = formData.name.trim();
-      if (formData.sponsor.trim()) data.sponsor = formData.sponsor.trim();
-      if (formData.details.trim()) data.details = formData.details.trim();
-      if (formData.location.trim()) data.location = formData.location.trim();
-      if (formData.rulesUrl.trim()) data.rulesUrl = formData.rulesUrl.trim();
-      if (formData.scheduledDay === 1 || formData.scheduledDay === 2) {
-        data.scheduledDay = formData.scheduledDay;
-      }
-      if (formData.scheduledTime.trim()) data.scheduledTime = formData.scheduledTime.trim();
-      data.status = formData.status;
+    // For creates, only send fields that are present.
+    if (formData.sponsor.trim()) data.sponsor = formData.sponsor.trim();
+    if (formData.details.trim()) data.details = formData.details.trim();
+    if (formData.location.trim()) data.location = formData.location.trim();
+    if (formData.rulesUrl.trim()) data.rulesUrl = formData.rulesUrl.trim();
+    if (formData.scheduledDay === 1 || formData.scheduledDay === 2) {
+      data.scheduledDay = formData.scheduledDay;
+    }
+    if (formData.scheduledTime.trim()) data.scheduledTime = formData.scheduledTime.trim();
 
-      if (formData.scoringType === 'judged' && categories.length > 0) {
-        data.judgedCategories = categories;
-      }
+    if (formData.scoringType === 'judged' && categories.length > 0) {
+      data.judgedCategories = categories;
     }
 
-    if (editingEvent) {
-      const result = await updateEvent(currentYear, editingEvent.eventId, data);
-      if (result) {
-        setShowForm(false);
-        setEditingEvent(null);
-        resetForm();
-        await refreshEvents();
-      }
-    } else {
-      const result = await createEvent(currentYear, data);
-      if (result) {
-        setShowForm(false);
-        resetForm();
-        await refreshEvents();
-      }
+    const result = await createEvent(currentYear, data);
+    if (result) {
+      setShowForm(false);
+      resetForm();
+      await refreshEvents();
     }
   };
 
@@ -134,7 +106,7 @@ export const AdminEvents: React.FC = () => {
   const handleStatusChange = async (event: Event, newStatus: EventStatus) => {
     if (!currentYear) return;
     
-    await updateEvent(currentYear, event.eventId, { status: newStatus });
+    await updateEventStatus(currentYear, event.eventId, { status: newStatus });
     await refreshEvents();
   };
 
@@ -151,23 +123,6 @@ export const AdminEvents: React.FC = () => {
       scheduledTime: '',
       status: 'upcoming',
     });
-  };
-
-  const handleEdit = (event: Event) => {
-    setEditingEvent(event);
-    setFormData({
-      name: event.name || '',
-      sponsor: event.sponsor || '',
-      details: event.details || '',
-      location: event.location || '',
-      rulesUrl: event.rulesUrl || '',
-      scoringType: event.scoringType,
-      judgedCategories: event.judgedCategories?.length ? event.judgedCategories : [''],
-      scheduledDay: event.scheduledDay || 0,
-      scheduledTime: event.scheduledTime || '',
-      status: event.status,
-    });
-    setShowForm(true);
   };
 
   const addCategoryField = () => {
@@ -236,12 +191,12 @@ export const AdminEvents: React.FC = () => {
         </Button>
       </div>
 
-      {/* Event Form */}
+      {/* Create Event Form */}
       {showForm && (
         <Card>
           <CardHeader>
             <h3 className="text-lg font-display font-semibold">
-              {editingEvent ? 'Edit Event' : 'Create New Event'}
+              Create New Event
             </h3>
           </CardHeader>
           <CardBody>
@@ -363,18 +318,17 @@ export const AdminEvents: React.FC = () => {
               <div className="flex gap-2 pt-4 border-t">
                 <Button
                   onClick={handleSubmit}
-                  disabled={createLoading || updateLoading}
+                  disabled={createLoading}
                 >
-                  {createLoading || updateLoading ? 'Saving...' : editingEvent ? 'Update Event' : 'Create Event'}
+                  {createLoading ? 'Creating...' : 'Create Event'}
                 </Button>
                 <Button
                   variant="secondary"
                   onClick={() => {
                     setShowForm(false);
-                    setEditingEvent(null);
                     resetForm();
                   }}
-                  disabled={createLoading || updateLoading}
+                  disabled={createLoading}
                 >
                   Cancel
                 </Button>
@@ -440,7 +394,7 @@ export const AdminEvents: React.FC = () => {
                             <Button
                               variant="secondary"
                               size="sm"
-                              onClick={() => handleEdit(event)}
+                              onClick={() => navigate(`/admin/events/${event.eventId}/edit`)}
                             >
                               Edit
                             </Button>
