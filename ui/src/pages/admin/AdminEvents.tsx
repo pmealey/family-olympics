@@ -216,6 +216,7 @@ export const AdminEvents: React.FC = () => {
                   Details
                 </label>
                 <textarea
+                  autoCapitalize="sentences"
                   value={formData.details}
                   onChange={(e) => setFormData({ ...formData, details: e.target.value })}
                   placeholder="A short description of this event..."
@@ -236,6 +237,7 @@ export const AdminEvents: React.FC = () => {
                 value={formData.rulesUrl}
                 onChange={(e) => setFormData({ ...formData, rulesUrl: e.target.value })}
                 placeholder="https://docs.google.com/document/d/..."
+                autoCapitalize="none"
               />
 
               <Select

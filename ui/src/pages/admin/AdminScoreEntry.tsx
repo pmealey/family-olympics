@@ -343,6 +343,7 @@ export const AdminScoreEntry: React.FC = () => {
                         value={placementData[team.teamId]?.rawScore || ''}
                         onChange={(e) => updatePlacement(team.teamId, 'rawScore', e.target.value)}
                         placeholder="2:34 or 15"
+                        autoCapitalize="none"
                       />
                     </div>
                   </div>

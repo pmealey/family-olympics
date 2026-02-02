@@ -6,13 +6,22 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   helpText?: string;
 }
 
+// Input types that should NOT auto-capitalize
+const noCapitalizeTypes = ['number', 'time', 'date', 'datetime-local', 'email', 'url', 'password', 'tel'];
+
 export const Input: React.FC<InputProps> = ({
   label,
   error,
   helpText,
   className = '',
+  type,
+  autoCapitalize,
   ...props
 }) => {
+  // Determine auto-capitalize: explicit prop > smart default based on type
+  const resolvedAutoCapitalize = autoCapitalize ?? 
+    (noCapitalizeTypes.includes(type || '') ? 'none' : 'words');
+
   return (
     <div className="w-full">
       {label && (
@@ -21,6 +30,8 @@ export const Input: React.FC<InputProps> = ({
         </label>
       )}
       <input
+        type={type}
+        autoCapitalize={resolvedAutoCapitalize}
         className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-winter-accent focus:border-transparent transition-all min-h-[44px] ${
           error ? 'border-red-500' : 'border-gray-300'
         } ${className}`}
