@@ -39,7 +39,7 @@ export interface Event {
   sponsor?: string | null;
   location?: string | null;
   rulesUrl?: string | null;
-  scoringType: 'placement' | 'judged';
+  scoringType: 'placement' | 'judged' | 'none';
   judgedCategories?: string[] | null;
   scheduledDay?: number | null;
   scheduledTime?: string | null;
@@ -224,7 +224,7 @@ class ApiClient {
     year: number,
     data: {
       name: string;
-      scoringType?: 'placement' | 'judged';
+      scoringType?: 'placement' | 'judged' | 'none';
       sponsor?: string | null;
       location?: string | null;
       rulesUrl?: string | null;
@@ -247,7 +247,7 @@ class ApiClient {
       sponsor?: string | null;
       location?: string | null;
       rulesUrl?: string | null;
-      scoringType?: 'placement' | 'judged';
+      scoringType?: 'placement' | 'judged' | 'none';
       judgedCategories?: string[] | null;
       scheduledDay?: number | null;
       scheduledTime?: string | null;

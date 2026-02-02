@@ -8,7 +8,7 @@ interface UpdateEventRequest {
   sponsor?: string | null;
   location?: string;
   rulesUrl?: string;
-  scoringType?: 'placement' | 'judged';
+  scoringType?: 'placement' | 'judged' | 'none';
   judgedCategories?: string[];
   scheduledDay?: number;
   scheduledTime?: string;
@@ -86,10 +86,10 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     }
 
     if (body.scoringType !== undefined) {
-      if (body.scoringType !== 'placement' && body.scoringType !== 'judged') {
+      if (body.scoringType !== 'placement' && body.scoringType !== 'judged' && body.scoringType !== 'none') {
         return errorResponse(
           ErrorCodes.VALIDATION_ERROR.code,
-          'scoringType must be either "placement" or "judged"',
+          'scoringType must be "placement", "judged", or "none"',
           ErrorCodes.VALIDATION_ERROR.status
         );
       }

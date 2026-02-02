@@ -194,6 +194,8 @@ export const EventDetail: React.FC = () => {
                 <span className="capitalize">
                   {event.scoringType === 'judged'
                     ? `Judged Event${event.judgedCategories?.length ? ` (${event.judgedCategories.length} categories)` : ''}`
+                    : event.scoringType === 'none'
+                    ? 'Non-Scoring Event'
                     : 'Placement Event'}
                 </span>
               </div>
@@ -202,8 +204,8 @@ export const EventDetail: React.FC = () => {
         </CardBody>
       </Card>
 
-      {/* Results Section */}
-      {event.status === 'completed' && placementScores.length > 0 && (
+      {/* Results Section - only show for scoring events */}
+      {event.scoringType !== 'none' && event.status === 'completed' && placementScores.length > 0 && (
         <Card>
           <CardBody>
             <h3 className="text-xl font-display font-bold mb-4">Results</h3>
@@ -244,8 +246,8 @@ export const EventDetail: React.FC = () => {
         </Card>
       )}
 
-      {/* In Progress Message */}
-      {event.status === 'in-progress' && (
+      {/* In Progress Message - only show for scoring events */}
+      {event.scoringType !== 'none' && event.status === 'in-progress' && (
         <Card>
           <CardBody>
             <div className="text-center py-8">
@@ -261,8 +263,8 @@ export const EventDetail: React.FC = () => {
         </Card>
       )}
 
-      {/* Upcoming Message */}
-      {event.status === 'upcoming' && (
+      {/* Upcoming Message - only show for scoring events */}
+      {event.scoringType !== 'none' && event.status === 'upcoming' && (
         <Card>
           <CardBody>
             <div className="text-center py-8">

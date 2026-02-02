@@ -9,7 +9,7 @@ import { apiClient } from '../../lib/api';
 import type { Event } from '../../lib/api';
 import { useMutation } from '../../hooks/useApi';
 
-type ScoringType = 'placement' | 'judged';
+type ScoringType = 'placement' | 'judged' | 'none';
 type EventStatus = 'upcoming' | 'in-progress' | 'completed';
 
 export const AdminEvents: React.FC = () => {
@@ -276,6 +276,7 @@ export const AdminEvents: React.FC = () => {
                 options={[
                   { value: 'placement', label: 'Placement (Timed/Scored)' },
                   { value: 'judged', label: 'Judged (Categories)' },
+                  { value: 'none', label: 'None (Non-Scoring Event)' },
                 ]}
               />
 
@@ -411,7 +412,7 @@ export const AdminEvents: React.FC = () => {
                                 <div>🕒 {new Date(`2000-01-01T${event.scheduledTime}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                               )}
                               <div>
-                                {event.scoringType === 'placement' ? '📊 Placement' : '⚖️ Judged'}
+                                {event.scoringType === 'placement' ? '📊 Placement' : event.scoringType === 'judged' ? '⚖️ Judged' : '🚫 Non-Scoring'}
                                 {event.judgedCategories?.length ? ` (${event.judgedCategories.length} categories)` : ''}
                               </div>
                             </div>

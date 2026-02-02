@@ -176,5 +176,26 @@ describe('Events Create Handler', () => {
     expect(body.success).toBe(false);
     expect(body.error.code).toBe('INTERNAL_ERROR');
   });
+
+  it('should create a non-scoring event with scoringType none', async () => {
+    (docClient.send as jest.Mock).mockResolvedValueOnce({});
+
+    const event = {
+      pathParameters: { year: '2025' },
+      body: JSON.stringify({
+        name: 'Opening Ceremony',
+        location: 'Main Stage',
+        scoringType: 'none',
+      }),
+    } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
+
+    const result = await handler(event);
+
+    expect(result.statusCode).toBe(201);
+    const body = JSON.parse(result.body);
+    expect(body.success).toBe(true);
+    expect(body.data.name).toBe('Opening Ceremony');
+    expect(body.data.scoringType).toBe('none');
+  });
 });
 

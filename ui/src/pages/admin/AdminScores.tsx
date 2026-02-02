@@ -166,9 +166,9 @@ export const AdminScores: React.FC = () => {
     }
   };
 
-  // Get list of events that need scoring
+  // Get list of events that need scoring (exclude non-scoring events)
   const eventsNeedingScores = events.filter(e => 
-    e.status === 'in-progress' || e.status === 'completed'
+    (e.status === 'in-progress' || e.status === 'completed') && e.scoringType !== 'none'
   );
 
   const placementScores = eventScores.filter(s => 'place' in s) as PlacementScore[];

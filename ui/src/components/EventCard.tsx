@@ -86,6 +86,8 @@ export const EventCard: React.FC<EventCardProps> = ({
                     <span className="capitalize">
                       {event.scoringType === 'judged'
                         ? `Judged${event.judgedCategories?.length ? ` (${event.judgedCategories.length} categories)` : ''}`
+                        : event.scoringType === 'none'
+                        ? 'Non-Scoring'
                         : 'Placement'}
                     </span>
                   </div>

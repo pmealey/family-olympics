@@ -124,5 +124,66 @@ describe('Events Update Handler', () => {
     expect(body.success).toBe(false);
     expect(body.error.code).toBe('INTERNAL_ERROR');
   });
+
+  it('should update an event scoringType to none', async () => {
+    // Mock that the event exists
+    (docClient.send as jest.Mock).mockResolvedValueOnce({
+      Item: {
+        year: 2025,
+        eventId: 'event-1',
+        name: 'Some Event',
+        scoringType: 'placement',
+      },
+    });
+    // Mock successful update
+    (docClient.send as jest.Mock).mockResolvedValueOnce({
+      Attributes: {
+        year: 2025,
+        eventId: 'event-1',
+        name: 'Some Event',
+        scoringType: 'none',
+        updatedAt: new Date().toISOString(),
+      },
+    });
+
+    const event = {
+      pathParameters: { year: '2025', eventId: 'event-1' },
+      body: JSON.stringify({
+        scoringType: 'none',
+      }),
+    } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
+
+    const result = await handler(event);
+
+    expect(result.statusCode).toBe(200);
+    const body = JSON.parse(result.body);
+    expect(body.success).toBe(true);
+    expect(body.data.scoringType).toBe('none');
+  });
+
+  it('should return 400 if scoringType is invalid', async () => {
+    // Mock that the event exists
+    (docClient.send as jest.Mock).mockResolvedValueOnce({
+      Item: {
+        year: 2025,
+        eventId: 'event-1',
+        name: 'Event Alpha',
+      },
+    });
+
+    const event = {
+      pathParameters: { year: '2025', eventId: 'event-1' },
+      body: JSON.stringify({
+        scoringType: 'invalid-type',
+      }),
+    } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
+
+    const result = await handler(event);
+
+    expect(result.statusCode).toBe(400);
+    const body = JSON.parse(result.body);
+    expect(body.success).toBe(false);
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
 });
 
