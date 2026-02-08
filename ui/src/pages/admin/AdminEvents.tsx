@@ -23,6 +23,7 @@ export const AdminEvents: React.FC = () => {
     details: '',
     location: '',
     rulesUrl: '',
+    displayRulesAndRegulations: false,
     scoringType: 'placement' as ScoringType,
     judgedCategories: [''],
     scheduledDay: 1,
@@ -72,6 +73,7 @@ export const AdminEvents: React.FC = () => {
     if (formData.details.trim()) data.details = formData.details.trim();
     if (formData.location.trim()) data.location = formData.location.trim();
     if (formData.rulesUrl.trim()) data.rulesUrl = formData.rulesUrl.trim();
+    if (formData.displayRulesAndRegulations) data.displayRulesAndRegulations = true;
     if (formData.scheduledDay === 1 || formData.scheduledDay === 2) {
       data.scheduledDay = formData.scheduledDay;
     }
@@ -114,6 +116,7 @@ export const AdminEvents: React.FC = () => {
       details: '',
       location: '',
       rulesUrl: '',
+      displayRulesAndRegulations: false,
       scoringType: 'placement',
       judgedCategories: [''],
       scheduledDay: 1,
@@ -232,6 +235,18 @@ export const AdminEvents: React.FC = () => {
                 placeholder="Backyard"
               />
 
+              <div className="flex items-center gap-3 mb-1">
+                <input
+                  type="checkbox"
+                  id="create-displayRulesAndRegulations"
+                  checked={formData.displayRulesAndRegulations}
+                  onChange={(e) => setFormData({ ...formData, displayRulesAndRegulations: e.target.checked })}
+                  className="w-5 h-5 rounded border-winter-gray/30 text-winter-accent focus:ring-winter-accent"
+                />
+                <label htmlFor="create-displayRulesAndRegulations" className="text-sm font-medium text-winter-dark">
+                  Display rules and regulations to competitors
+                </label>
+              </div>
               <Input
                 label="Rules URL (Google Doc)"
                 value={formData.rulesUrl}

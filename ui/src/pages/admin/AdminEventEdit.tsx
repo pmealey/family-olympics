@@ -27,6 +27,7 @@ export const AdminEventEdit: React.FC = () => {
     details: '',
     location: '',
     rulesUrl: '',
+    displayRulesAndRegulations: false,
     scoringType: 'placement' as ScoringType,
     judgedCategories: [''],
     scheduledDay: 1,
@@ -57,6 +58,7 @@ export const AdminEventEdit: React.FC = () => {
             details: result.data.details || '',
             location: result.data.location || '',
             rulesUrl: result.data.rulesUrl || '',
+            displayRulesAndRegulations: result.data.displayRulesAndRegulations === true,
             scoringType: result.data.scoringType,
             judgedCategories: result.data.judgedCategories?.length ? result.data.judgedCategories : [''],
             scheduledDay: result.data.scheduledDay || 0,
@@ -98,6 +100,7 @@ export const AdminEventEdit: React.FC = () => {
       details: trimOrNull(formData.details),
       location: trimOrNull(formData.location),
       rulesUrl: trimOrNull(formData.rulesUrl),
+      displayRulesAndRegulations: formData.displayRulesAndRegulations,
       completed: formData.completed,
       scheduledDay:
         formData.scheduledDay === 1 || formData.scheduledDay === 2
@@ -230,6 +233,18 @@ export const AdminEventEdit: React.FC = () => {
               placeholder="Backyard"
             />
 
+            <div className="flex items-center gap-3 mb-1">
+              <input
+                type="checkbox"
+                id="displayRulesAndRegulations"
+                checked={formData.displayRulesAndRegulations}
+                onChange={(e) => setFormData({ ...formData, displayRulesAndRegulations: e.target.checked })}
+                className="w-5 h-5 rounded border-winter-gray/30 text-winter-accent focus:ring-winter-accent"
+              />
+              <label htmlFor="displayRulesAndRegulations" className="text-sm font-medium text-winter-dark">
+                Display rules and regulations to competitors
+              </label>
+            </div>
             <Input
               label="Rules URL (Google Doc)"
               value={formData.rulesUrl}

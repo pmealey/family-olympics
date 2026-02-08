@@ -9,6 +9,7 @@ interface UpdateEventRequest {
   details?: string | null;
   location?: string;
   rulesUrl?: string;
+  displayRulesAndRegulations?: boolean;
   scoringType?: 'placement' | 'judged' | 'none';
   judgedCategories?: string[];
   scheduledDay?: number;
@@ -89,6 +90,11 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     if (body.rulesUrl !== undefined) {
       updates.push('rulesUrl = :rulesUrl');
       attributeValues[':rulesUrl'] = body.rulesUrl;
+    }
+
+    if (body.displayRulesAndRegulations !== undefined) {
+      updates.push('displayRulesAndRegulations = :displayRulesAndRegulations');
+      attributeValues[':displayRulesAndRegulations'] = body.displayRulesAndRegulations;
     }
 
     if (body.scoringType !== undefined) {

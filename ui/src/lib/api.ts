@@ -40,6 +40,7 @@ export interface Event {
   details?: string | null;
   location?: string | null;
   rulesUrl?: string | null;
+  displayRulesAndRegulations?: boolean;
   scoringType: 'placement' | 'judged' | 'none';
   judgedCategories?: string[] | null;
   scheduledDay?: number | null;

@@ -269,8 +269,8 @@ export const EventDetail: React.FC = () => {
         </Card>
       )}
 
-      {/* Rules Section */}
-      {event.rulesUrl && (
+      {/* Rules Section - only show iframe when displayRulesAndRegulations is true (undefined = hide for backwards compatibility) */}
+      {event.rulesUrl && event.displayRulesAndRegulations === true && (
         <Card>
           <CardBody>
             <h3 className="text-xl font-display font-bold mb-4">
