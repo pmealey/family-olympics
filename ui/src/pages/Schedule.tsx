@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { EventCard, Loading, Card, CardBody, PageTransition, EmptyState, ErrorMessage, RefreshButton } from '../components';
 import { useCurrentOlympics, useEvents } from '../hooks/useApi';
 import type { Event } from '../lib/api';
@@ -58,7 +59,12 @@ export const Schedule: React.FC = () => {
     return (
       <PageTransition>
         <div className="space-y-6">
-          <h2 className="text-2xl font-display font-bold">Schedule</h2>
+          <header className="space-y-1">
+            <Link to="/" className="inline-block text-sm text-winter-gray hover:text-winter-accent transition-colors rounded focus:outline-none focus:ring-2 focus:ring-winter-accent/50" aria-label="Back to home">
+              ← Back to Home
+            </Link>
+            <h1 className="text-xl sm:text-2xl font-display font-bold text-winter-dark m-0">Schedule</h1>
+          </header>
           <ErrorMessage
             title="Failed to load schedule"
             message={error}
@@ -72,10 +78,19 @@ export const Schedule: React.FC = () => {
   return (
     <PageTransition>
       <div className="space-y-6">
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="text-xl sm:text-2xl font-display font-bold">Schedule</h2>
-        <RefreshButton onRefresh={handleRefresh} />
-      </div>
+      <header className="space-y-1">
+        <Link
+          to="/"
+          className="inline-block text-sm text-winter-gray hover:text-winter-accent transition-colors rounded focus:outline-none focus:ring-2 focus:ring-winter-accent/50"
+          aria-label="Back to home"
+        >
+          ← Back to Home
+        </Link>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-xl sm:text-2xl font-display font-bold text-winter-dark m-0">Schedule</h1>
+          <RefreshButton onRefresh={handleRefresh} />
+        </div>
+      </header>
 
       {isLoading ? (
         <div className="py-8">
