@@ -27,7 +27,7 @@ import type { JudgeScore, Team } from '../lib/api';
 export const JudgeScoreEntry: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
-  const { judgeName } = useJudge();
+  const { judgeName, judgeTeamId } = useJudge();
 
   const { data: olympics, loading: olympicsLoading } = useCurrentOlympics();
   const { data: event, loading: eventLoading } = useEvent(
@@ -41,7 +41,7 @@ export const JudgeScoreEntry: React.FC = () => {
     execute: refreshScores,
   } = useEventScores(olympics?.year || null, eventId || null);
 
-  const [currentTeamIndex, setCurrentTeamIndex] = useState(0);
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [categoryScores, setCategoryScores] = useState<Record<string, number>>({});
   const [showAggregates, setShowAggregates] = useState(false);
 
@@ -50,9 +50,18 @@ export const JudgeScoreEntry: React.FC = () => {
       apiClient.submitJudgeScore(year, eventId, data)
   );
 
-  // Get teams that need scoring and calculate progress
+  // Teams this judge is allowed to score (team reps exclude their own team)
+  const allowedTeams = useMemo(() => {
+    const teams = teamsData?.teams ?? [];
+    if (judgeTeamId) {
+      return teams.filter((t) => t.teamId !== judgeTeamId);
+    }
+    return teams;
+  }, [teamsData?.teams, judgeTeamId]);
+
+  // Get teams that still need scoring and progress
   const { teamsToScore, totalTeams, scoredCount } = useMemo(() => {
-    if (!teamsData?.teams || !judgeName) {
+    if (!allowedTeams.length || !judgeName) {
       return { teamsToScore: [], totalTeams: 0, scoredCount: 0 };
     }
 
@@ -62,24 +71,33 @@ export const JudgeScoreEntry: React.FC = () => {
     );
 
     const scoredTeamIds = new Set(judgeScores.map((score) => score.teamId));
-    const teamsToScore = teamsData.teams.filter(
+    const teamsToScore = allowedTeams.filter(
       (team) => !scoredTeamIds.has(team.teamId)
     );
 
     return {
       teamsToScore,
-      totalTeams: teamsData.teams.length,
+      totalTeams: allowedTeams.length,
       scoredCount: scoredTeamIds.size,
     };
-  }, [teamsData, scoresData, judgeName]);
+  }, [allowedTeams, scoresData, judgeName]);
 
-  const currentTeam = teamsToScore[currentTeamIndex];
+  const currentTeam = selectedTeamId
+    ? teamsToScore.find((t) => t.teamId === selectedTeamId) ?? null
+    : null;
 
-  // Reset category scores when team changes
+  // Reset category scores when selected team changes
   useEffect(() => {
-    // Reset to empty scores for each new team
     setCategoryScores({});
-  }, [currentTeam?.teamId]);
+  }, [selectedTeamId]);
+
+  // Clear selection if selected team was just scored (no longer in list)
+  const selectedStillUnscored = selectedTeamId && teamsToScore.some((t) => t.teamId === selectedTeamId);
+  useEffect(() => {
+    if (selectedTeamId && !selectedStillUnscored) {
+      setSelectedTeamId(null);
+    }
+  }, [selectedTeamId, selectedStillUnscored]);
 
   // Calculate total score and check if all categories are scored
   const { totalScore, allCategoriesScored } = useMemo(() => {
@@ -117,18 +135,8 @@ export const JudgeScoreEntry: React.FC = () => {
     });
 
     if (result) {
-      // Refresh scores to update the list
       await refreshScores();
-
-      // After refresh, teamsToScore will be recalculated and the scored team removed
-      // So we keep currentTeamIndex at 0 to always show the first unscored team
-      // If there are more teams to score, stay at index 0 (next unscored team)
-      // If no more teams, show aggregates
-      // Note: teamsToScore.length here is the OLD length before refresh
-      // We'll check in the next render cycle if there are more teams
-      setCurrentTeamIndex(0);
-      
-      // Check if this was the last team (will be recalculated on next render)
+      setSelectedTeamId(null);
       if (teamsToScore.length <= 1) {
         setShowAggregates(true);
       }
@@ -248,39 +256,75 @@ export const JudgeScoreEntry: React.FC = () => {
     );
   }
 
+  // Team picker: choose which team to score next (flexible order)
+  if (!selectedTeamId || !currentTeam) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between gap-2">
+          <Button variant="ghost" size="sm" onClick={handleBack}>
+            ← Back
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setShowAggregates(true)}>
+            View Scores
+          </Button>
+        </div>
+        <div className="text-center px-2">
+          <h2 className="text-xl sm:text-2xl font-display font-bold break-words">{event.name || 'Untitled Event'}</h2>
+          <p className="text-winter-gray mt-1">
+            Choose a team to score ({scoredCount} of {totalTeams} done)
+          </p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {teamsToScore.map((team) => (
+            <Card
+              key={team.teamId}
+              teamColor={team.color}
+              onClick={() => setSelectedTeamId(team.teamId)}
+            >
+              <CardBody className="flex flex-row items-center gap-3">
+                <TeamColorIndicator color={team.color} size="lg" />
+                <div className="min-w-0 flex-1">
+                  <div className="font-display font-semibold truncate">{team.name}</div>
+                  <div className="text-sm text-winter-gray">Tap to enter scores</div>
+                </div>
+                <span className="text-winter-gray shrink-0">→</span>
+              </CardBody>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Score entry form for the selected team
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between gap-2">
-        <Button variant="ghost" size="sm" onClick={handleBack}>
-          ← Back
+        <Button variant="ghost" size="sm" onClick={() => setSelectedTeamId(null)}>
+          ← Team list
         </Button>
         <Button variant="ghost" size="sm" onClick={() => setShowAggregates(true)}>
           View Scores
         </Button>
       </div>
 
-      {/* Event Title */}
       <div className="text-center px-2">
         <h2 className="text-xl sm:text-2xl font-display font-bold break-words">{event.name || 'Untitled Event'}</h2>
         <p className="text-winter-gray mt-1 truncate">
-          Scoring: {currentTeam?.name || 'Unknown Team'}
+          Scoring: {currentTeam.name}
         </p>
         <p className="text-sm text-winter-gray mt-1">
-          Team {scoredCount + 1} of {totalTeams}
+          {scoredCount + 1} of {totalTeams} scored
         </p>
       </div>
 
-      {/* Score Entry Card */}
-      <Card teamColor={currentTeam?.color}>
+      <Card teamColor={currentTeam.color}>
         <CardBody className="space-y-6">
-          {/* Team Name with Color Indicator */}
           <div className="flex items-center gap-2 sm:gap-3 pb-4 border-b border-gray-200">
-            <TeamColorIndicator color={currentTeam?.color} size="lg" />
-            <h3 className="text-lg sm:text-xl font-display font-semibold truncate">{currentTeam?.name}</h3>
+            <TeamColorIndicator color={currentTeam.color} size="lg" />
+            <h3 className="text-lg sm:text-xl font-display font-semibold truncate">{currentTeam.name}</h3>
           </div>
 
-          {/* Category Scores */}
           {judgedCategories.map((category) => (
             <ScoreInput
               key={category}
@@ -291,7 +335,6 @@ export const JudgeScoreEntry: React.FC = () => {
             />
           ))}
 
-          {/* Total Score Display */}
           <div className="pt-4 border-t border-gray-200">
             <div className="flex items-center justify-between gap-2">
               <span className="text-base sm:text-lg font-medium text-winter-dark">Total:</span>
@@ -301,7 +344,6 @@ export const JudgeScoreEntry: React.FC = () => {
             </div>
           </div>
 
-          {/* Error Message */}
           {submitError && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-sm text-red-600">{submitError}</p>
@@ -327,7 +369,7 @@ export const JudgeScoreEntry: React.FC = () => {
 
           {allCategoriesScored && teamsToScore.length > 1 && (
             <p className="text-center text-sm text-winter-gray">
-              Next: {teamsToScore[1]?.name} →
+              Return to team list to score another
             </p>
           )}
         </CardFooter>

@@ -11,7 +11,7 @@ import type { Event, JudgeScore } from '../lib/api';
 
 export const JudgeEvents: React.FC = () => {
   const navigate = useNavigate();
-  const { judgeName, clearJudgeName } = useJudge();
+  const { judgeName, judgeTeamId, clearJudgeName } = useJudge();
   const { data: olympics, loading: olympicsLoading } = useCurrentOlympics();
   const { data: eventsData, loading: eventsLoading } = useEvents(
     olympics?.year || null
@@ -24,6 +24,15 @@ export const JudgeEvents: React.FC = () => {
       event.scoringType === 'judged' && !event.completed
     ) || [];
   }, [eventsData]);
+
+  // Team reps judge only the other three teams; CUNF judges all four
+  const teamsJudgeCanScore = useMemo(() => {
+    const teams = teamsData?.teams ?? [];
+    if (judgeTeamId) {
+      return teams.filter((t) => t.teamId !== judgeTeamId);
+    }
+    return teams;
+  }, [teamsData?.teams, judgeTeamId]);
 
   const handleEditName = () => {
     clearJudgeName();
@@ -97,7 +106,7 @@ export const JudgeEvents: React.FC = () => {
               event={event}
               judgeName={judgeName!}
               year={olympics.year}
-              teams={teamsData?.teams || []}
+              teams={teamsJudgeCanScore}
               onScore={() => navigate(`/judge/events/${event.eventId}/score`)}
             />
           ))
