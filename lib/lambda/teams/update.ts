@@ -51,14 +51,16 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       );
     }
 
-    // Build update expression
+    // Build update expression (use ExpressionAttributeNames for reserved keywords like "name")
     const updates: string[] = [];
     const attributeValues: Record<string, any> = {
       ':now': new Date().toISOString(),
     };
+    const attributeNames: Record<string, string> = {};
 
     if (body.name !== undefined) {
-      updates.push('name = :name');
+      attributeNames['#name'] = 'name';
+      updates.push('#name = :name');
       attributeValues[':name'] = body.name;
     }
 
@@ -96,6 +98,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
         },
         UpdateExpression: `SET ${updates.join(', ')}`,
         ExpressionAttributeValues: attributeValues,
+        ...(Object.keys(attributeNames).length > 0 && { ExpressionAttributeNames: attributeNames }),
         ReturnValues: 'ALL_NEW',
       })
     );
