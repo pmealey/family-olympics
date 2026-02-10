@@ -53,7 +53,7 @@ export const TeamDetail: React.FC = () => {
           </Link>
           <div className="flex items-center justify-between gap-3">
             <h1 className="text-xl sm:text-2xl font-display font-bold text-winter-dark m-0">
-              Team details
+              Team roster
             </h1>
             <RefreshButton onRefresh={handleRefresh} />
           </div>
