@@ -91,9 +91,10 @@ export const Home: React.FC = () => {
             <>
               <div className="space-y-2 sm:space-y-3">
                 {standings.map((standing) => (
-                  <div
+                  <Link
                     key={standing.team.teamId}
-                    className="flex items-center justify-between gap-2 p-2 sm:p-3 bg-gray-50 rounded-lg transition-all hover:bg-gray-100"
+                    to={`/teams/${standing.team.teamId}`}
+                    className="flex items-center justify-between gap-2 p-2 sm:p-3 bg-gray-50 rounded-lg transition-all hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-winter-accent/50"
                   >
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                       <span className="text-xl sm:text-2xl shrink-0">
@@ -107,7 +108,7 @@ export const Home: React.FC = () => {
                     <span className="font-mono font-bold text-base sm:text-lg shrink-0">
                       {formatPoints(standing.totalPoints)}
                     </span>
-                  </div>
+                  </Link>
                 ))}
               </div>
               
