@@ -70,9 +70,13 @@ export function calculateStandings(
     (a, b) => b.totalPoints - a.totalPoints
   );
 
-  // Assign ranks
+  // Assign ranks: tied teams get the same rank (position they're tied at)
   standings.forEach((standing, index) => {
-    standing.rank = index + 1;
+    if (index > 0 && standing.totalPoints === standings[index - 1].totalPoints) {
+      standing.rank = standings[index - 1].rank;
+    } else {
+      standing.rank = index + 1;
+    }
   });
 
   return standings;
