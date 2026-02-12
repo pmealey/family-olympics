@@ -238,6 +238,9 @@ export class FamilyOlympicsStack extends cdk.Stack {
     scoresTable.grantReadWriteData(submitJudgeScoreHandler); // May need to read existing
     scoresTable.grantReadWriteData(deleteScoreHandler); // Needs read to check if exists
 
+    // Cross-table: SubmitJudgeScoreHandler reads Events to validate event exists and not completed
+    eventsTable.grantReadData(submitJudgeScoreHandler);
+
     // ============================================
     // API Gateway
     // ============================================
