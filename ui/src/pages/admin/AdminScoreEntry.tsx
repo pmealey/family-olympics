@@ -117,13 +117,13 @@ export const AdminScoreEntry: React.FC = () => {
     });
   };
 
-  // Calculate judged event results
+  // Calculate judged event results (include every team, even with 0 points)
   const calculateJudgedResults = () => {
     if (!event || event.scoringType !== 'judged') return [];
 
     const judgeScores = eventScores.filter(s => 'judgeName' in s) as JudgeScore[];
 
-    // Group by team
+    // Initialize all teams so every team appears in results
     const teamScores: Record<string, {
       teamId: string;
       totalScore: number;
@@ -131,15 +131,17 @@ export const AdminScoreEntry: React.FC = () => {
       categoryTotals: Record<string, number>;
     }> = {};
 
+    teams.forEach(t => {
+      teamScores[t.teamId] = {
+        teamId: t.teamId,
+        totalScore: 0,
+        judgeCount: 0,
+        categoryTotals: {},
+      };
+    });
+
     judgeScores.forEach(score => {
-      if (!teamScores[score.teamId]) {
-        teamScores[score.teamId] = {
-          teamId: score.teamId,
-          totalScore: 0,
-          judgeCount: 0,
-          categoryTotals: {},
-        };
-      }
+      if (!teamScores[score.teamId]) return;
 
       const team = teamScores[score.teamId];
       team.judgeCount++;
@@ -150,8 +152,13 @@ export const AdminScoreEntry: React.FC = () => {
       });
     });
 
-    // Sort by total score
-    const ranked = Object.values(teamScores).sort((a, b) => b.totalScore - a.totalScore);
+    // Sort by total score descending; 0-score teams at bottom
+    const ranked = Object.values(teamScores).sort((a, b) => {
+      if (a.judgeCount === 0 && b.judgeCount === 0) return 0;
+      if (a.judgeCount === 0) return 1;
+      if (b.judgeCount === 0) return -1;
+      return b.totalScore - a.totalScore;
+    });
 
     return ranked.map((team, index) => ({
       ...team,
@@ -389,31 +396,40 @@ export const AdminScoreEntry: React.FC = () => {
                 </div>
               </div>
 
-              {/* Auto-Calculated Results */}
+              {/* Auto-Calculated Results - show every team, including 0 points */}
               {judgedResults.length > 0 && (
                 <div>
                   <h4 className="font-display font-semibold mb-3">Auto-Calculated Results:</h4>
                   <div className="space-y-2">
-                      {judgedResults.map((result) => (
+                      {judgedResults.map((result) => {
+                        const hasScores = result.judgeCount > 0;
+                        return (
                       <div
                         key={result.teamId}
                         className="flex items-center justify-between gap-2 p-3 sm:p-4 bg-ice-blue rounded-lg"
                       >
                         <div className="flex items-center gap-2 min-w-0 flex-1">
                           <span className="font-bold text-winter-blue text-base sm:text-lg shrink-0">
-                            {result.suggestedPlace}.
+                            {hasScores ? `${result.suggestedPlace}.` : '—'}
                           </span>
                           {result.team && <TeamColorIndicator color={result.team.color} />}
                           <span className="font-display font-bold truncate">{result.team?.name}</span>
                         </div>
                         <div className="text-right shrink-0">
-                          <div className="font-mono font-bold text-base sm:text-lg">{result.totalScore} pts</div>
-                          <div className="text-xs text-winter-gray">
-                            {result.judgeCount} judge{result.judgeCount !== 1 ? 's' : ''}
-                          </div>
+                          {hasScores ? (
+                            <>
+                              <div className="font-mono font-bold text-base sm:text-lg">{result.totalScore} pts</div>
+                              <div className="text-xs text-winter-gray">
+                                {result.judgeCount} judge{result.judgeCount !== 1 ? 's' : ''}
+                              </div>
+                            </>
+                          ) : (
+                            <div className="text-sm text-winter-gray">No scores yet</div>
+                          )}
                         </div>
                       </div>
-                    ))}
+                    );
+                    })}
                   </div>
 
                   {placementScores.length === 0 ? (

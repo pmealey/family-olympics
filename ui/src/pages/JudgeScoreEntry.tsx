@@ -453,10 +453,13 @@ const AggregateScoresView: React.FC<AggregateScoresViewProps> = ({
         });
       });
 
-    // Sort by total score descending
-    return Object.values(teamScores)
-      .filter((ts) => ts.judgeCount > 0)
-      .sort((a, b) => b.totalScore - a.totalScore);
+    // Sort by total score descending; include all teams (0-score teams at bottom)
+    return Object.values(teamScores).sort((a, b) => {
+      if (a.judgeCount === 0 && b.judgeCount === 0) return 0;
+      if (a.judgeCount === 0) return 1;
+      if (b.judgeCount === 0) return -1;
+      return b.totalScore - a.totalScore;
+    });
   }, [teams, allScores]);
 
   const myScores = useMemo(() => {
@@ -641,7 +644,8 @@ const AggregateScoresView: React.FC<AggregateScoresViewProps> = ({
         ) : (
           <div className="space-y-2">
             {aggregates.map((agg, index) => {
-              const isLeader = index === 0;
+              const isLeader = index === 0 && agg.judgeCount > 0;
+              const hasScores = agg.judgeCount > 0;
               return (
                 <Card
                   key={agg.team.teamId}
@@ -657,15 +661,23 @@ const AggregateScoresView: React.FC<AggregateScoresViewProps> = ({
                           <div className="min-w-0">
                             <div className="font-medium truncate">{agg.team.name}</div>
                             <div className="text-xs text-winter-gray">
-                              {agg.judgeCount} judge{agg.judgeCount !== 1 ? 's' : ''}
+                              {hasScores
+                                ? `${agg.judgeCount} judge${agg.judgeCount !== 1 ? 's' : ''}`
+                                : 'No scores yet'}
                             </div>
                           </div>
                         </div>
                         <div className="text-right shrink-0">
-                          <div className="text-xl sm:text-2xl font-display font-bold text-winter-accent">
-                            {agg.totalScore}
-                          </div>
-                          <div className="text-xs text-winter-gray">total pts</div>
+                          {hasScores ? (
+                            <>
+                              <div className="text-xl sm:text-2xl font-display font-bold text-winter-accent">
+                                {agg.totalScore}
+                              </div>
+                              <div className="text-xs text-winter-gray">total pts</div>
+                            </>
+                          ) : (
+                            <div className="text-sm text-winter-gray">—</div>
+                          )}
                         </div>
                       </div>
                     </div>

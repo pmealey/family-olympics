@@ -107,6 +107,8 @@ export const JudgeEvents: React.FC = () => {
               judgeName={judgeName!}
               year={olympics.year}
               teams={teamsJudgeCanScore}
+              allTeams={teamsData?.teams ?? []}
+              judgeTeamId={judgeTeamId ?? null}
               onScore={() => navigate(`/judge/events/${event.eventId}/score`)}
             />
           ))
@@ -121,6 +123,8 @@ interface JudgeEventCardProps {
   judgeName: string;
   year: number;
   teams: Array<{ teamId: string; name: string }>;
+  allTeams: Array<{ teamId: string; name: string }>;
+  judgeTeamId: string | null;
   onScore: () => void;
 }
 
@@ -129,26 +133,29 @@ const JudgeEventCard: React.FC<JudgeEventCardProps> = ({
   judgeName,
   year,
   teams,
+  allTeams,
+  judgeTeamId,
   onScore,
 }) => {
   const { data: scoresData, loading: scoresLoading } = useEventScores(year, event.eventId);
 
   const scoringStatus = useMemo(() => {
-    if (!scoresData?.scores) {
-      return { scored: [], unscored: teams };
-    }
-
-    const judgeScores = scoresData.scores.filter(
-      (score): score is JudgeScore =>
-        'judgeName' in score && score.judgeName === judgeName
+    const scoredTeamIds = new Set(
+      (scoresData?.scores ?? [])
+        .filter((score): score is JudgeScore => 'judgeName' in score && score.judgeName === judgeName)
+        .map((score) => score.teamId)
     );
-
-    const scoredTeamIds = new Set(judgeScores.map((score) => score.teamId));
     const scored = teams.filter((team) => scoredTeamIds.has(team.teamId));
     const unscored = teams.filter((team) => !scoredTeamIds.has(team.teamId));
 
-    return { scored, unscored };
-  }, [scoresData, teams, judgeName]);
+    // Build list of all teams with status for display (so team rep sees all 4, including "Your team")
+    const allTeamsStatus = allTeams.map((team) => ({
+      team,
+      status: team.teamId === judgeTeamId ? 'yourTeam' as const : scoredTeamIds.has(team.teamId) ? 'scored' as const : 'unscored' as const,
+    }));
+
+    return { scored, unscored, allTeamsStatus };
+  }, [scoresData, teams, allTeams, judgeTeamId, judgeName]);
 
   const isComplete = scoringStatus.unscored.length === 0 && teams.length > 0;
 
@@ -168,9 +175,9 @@ const JudgeEventCard: React.FC<JudgeEventCardProps> = ({
             </div>
           </div>
 
-          {/* Scoring Progress */}
+          {/* Scoring Progress - show all teams; team rep sees their team as "Your team" */}
           <div className="space-y-2">
-            <p className="text-sm font-medium text-winter-dark">Your scores:</p>
+            <p className="text-sm font-medium text-winter-dark">Current standings:</p>
             {scoresLoading ? (
               <div className="flex items-center gap-2 text-sm text-winter-gray py-2">
                 <div className="w-4 h-4 border-2 border-winter-gray/30 border-t-winter-blue rounded-full animate-spin" />
@@ -178,22 +185,19 @@ const JudgeEventCard: React.FC<JudgeEventCardProps> = ({
               </div>
             ) : (
               <div className="grid grid-cols-1 xs:grid-cols-2 gap-1 sm:gap-2">
-                {scoringStatus.scored.map((team) => (
+                {scoringStatus.allTeamsStatus.map(({ team, status }) => (
                   <div
                     key={team.teamId}
-                    className="flex items-center text-sm text-green-600"
+                    className={`flex items-center text-sm ${
+                      status === 'scored' ? 'text-green-600' : status === 'yourTeam' ? 'text-winter-gray italic' : 'text-winter-gray'
+                    }`}
                   >
-                    <span className="mr-2 shrink-0">✓</span>
-                    <span className="truncate">{team.name}</span>
-                  </div>
-                ))}
-                {scoringStatus.unscored.map((team) => (
-                  <div
-                    key={team.teamId}
-                    className="flex items-center text-sm text-winter-gray"
-                  >
-                    <span className="mr-2 shrink-0">○</span>
-                    <span className="truncate">{team.name}</span>
+                    <span className="mr-2 shrink-0">
+                      {status === 'scored' ? '✓' : status === 'yourTeam' ? '—' : '○'}
+                    </span>
+                    <span className="truncate">
+                      {status === 'yourTeam' ? `${team.name} (Your team)` : team.name}
+                    </span>
                   </div>
                 ))}
               </div>
