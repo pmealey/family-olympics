@@ -193,11 +193,25 @@ export const EventDetail: React.FC = () => {
                 <span>🎯</span>
                 <span className="capitalize">
                   {event.scoringType === 'judged'
-                    ? `Judged Event${event.judgedCategories?.length ? ` (${event.judgedCategories.length} categories)` : ''}`
+                    ? 'Judged Event'
                     : event.scoringType === 'none'
                     ? 'Non-Scoring Event'
                     : 'Placement Event'}
                 </span>
+              </div>
+            )}
+
+            {(event.judgedCategories ?? []).length > 0 && (
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-1">
+                <span className="text-sm text-winter-dark font-medium">Categories:</span>
+                {(event.judgedCategories ?? []).map((category) => (
+                  <span
+                    key={category}
+                    className="inline-flex items-center rounded-md bg-winter-blue/10 px-2 py-0.5 text-xs font-medium text-winter-blue"
+                  >
+                    {category}
+                  </span>
+                ))}
               </div>
             )}
           </div>
