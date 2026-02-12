@@ -160,11 +160,22 @@ export const AdminScoreEntry: React.FC = () => {
       return b.totalScore - a.totalScore;
     });
 
-    return ranked.map((team, index) => ({
-      ...team,
-      suggestedPlace: index + 1,
-      team: teams.find(t => t.teamId === team.teamId),
-    }));
+    // Ties: same score = same place; next distinct score skips (e.g. two 1st → next is 3rd)
+    let nextPlace = 1;
+    return ranked.map((team, i) => {
+      let suggestedPlace = 0;
+      if (team.judgeCount > 0) {
+        if (i === 0 || ranked[i - 1].totalScore !== team.totalScore) {
+          nextPlace = i + 1;
+        }
+        suggestedPlace = nextPlace;
+      }
+      return {
+        ...team,
+        suggestedPlace,
+        team: teams.find(t => t.teamId === team.teamId),
+      };
+    });
   };
 
   const handleFinalizePlacement = async (results: any[]) => {

@@ -454,11 +454,24 @@ const AggregateScoresView: React.FC<AggregateScoresViewProps> = ({
       });
 
     // Sort by total score descending; include all teams (0-score teams at bottom)
-    return Object.values(teamScores).sort((a, b) => {
+    const sorted = Object.values(teamScores).sort((a, b) => {
       if (a.judgeCount === 0 && b.judgeCount === 0) return 0;
       if (a.judgeCount === 0) return 1;
       if (b.judgeCount === 0) return -1;
       return b.totalScore - a.totalScore;
+    });
+
+    // Assign place with ties: same score = same place; next distinct score skips (e.g. two 1st → next is 3rd)
+    let nextPlace = 1;
+    return sorted.map((agg, i) => {
+      let place = 0;
+      if (agg.judgeCount > 0) {
+        if (i === 0 || sorted[i - 1].totalScore !== agg.totalScore) {
+          nextPlace = i + 1;
+        }
+        place = nextPlace;
+      }
+      return { ...agg, place };
     });
   }, [teams, allScores]);
 
@@ -643,20 +656,26 @@ const AggregateScoresView: React.FC<AggregateScoresViewProps> = ({
           </Card>
         ) : (
           <div className="space-y-2">
-            {aggregates.map((agg, index) => {
-              const isLeader = index === 0 && agg.judgeCount > 0;
+            {aggregates.map((agg) => {
               const hasScores = agg.judgeCount > 0;
+              const place = 'place' in agg ? agg.place : 0;
+              const isTiedForFirst = hasScores && place === 1;
               return (
                 <Card
                   key={agg.team.teamId}
                   teamColor={agg.team.color}
-                  className={isLeader ? 'ring-2 ring-yellow-400' : ''}
+                  className={isTiedForFirst ? 'ring-2 ring-yellow-400' : ''}
                 >
                   <CardBody>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2 min-w-0 flex-1">
-                          {isLeader && <span className="text-xl sm:text-2xl shrink-0">👑</span>}
+                          {isTiedForFirst && <span className="text-xl sm:text-2xl shrink-0">👑</span>}
+                          {hasScores && (
+                            <span className="font-bold text-winter-blue text-base sm:text-lg shrink-0">
+                              {place}.
+                            </span>
+                          )}
                           <TeamColorIndicator color={agg.team.color} />
                           <div className="min-w-0">
                             <div className="font-medium truncate">{agg.team.name}</div>
