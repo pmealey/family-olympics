@@ -213,7 +213,10 @@ export const AdminScoreEntry: React.FC = () => {
         await apiClient.deleteScore(currentYear, event.eventId, score.scoreId);
       }
 
-      // Note: Resetting scores does NOT uncomplete the event per requirements
+      // Uncomplete the event when scores are reset
+      await apiClient.updateEvent(currentYear, event.eventId, { completed: false });
+      await refreshEvents();
+      setEvent(prev => prev ? { ...prev, completed: false } : null);
 
       // Refresh data
       const scoresResponse = await apiClient.listEventScores(currentYear, event.eventId);
