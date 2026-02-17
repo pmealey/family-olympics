@@ -67,6 +67,15 @@ export const Gallery: React.FC = () => {
   const [lightboxItem, setLightboxItem] = useState<MediaItem | null>(null);
   const [showUploadCard, setShowUploadCard] = useState(false);
 
+  // Refetch media when returning from upload view so new uploads appear
+  const prevShowUploadRef = React.useRef(showUploadCard);
+  useEffect(() => {
+    if (prevShowUploadRef.current === true && showUploadCard === false) {
+      refetchMedia();
+    }
+    prevShowUploadRef.current = showUploadCard;
+  }, [showUploadCard, refetchMedia]);
+
   const handleRefresh = useCallback(async () => {
     await Promise.all([refetchOlympics(), refetchMedia()]);
   }, [refetchOlympics, refetchMedia]);
