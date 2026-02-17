@@ -316,6 +316,7 @@ function GalleryThumb({
           src={thumbUrl}
           alt={item.caption || item.mediaId}
           className="w-full h-full object-cover"
+          crossOrigin="anonymous"
         />
       ) : item.type === 'video' && thumbUrl ? (
         <div className="relative w-full h-full">
@@ -323,6 +324,7 @@ function GalleryThumb({
             src={thumbUrl}
             alt=""
             className="w-full h-full object-cover"
+            crossOrigin="anonymous"
           />
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="text-4xl">▶️</span>
@@ -468,6 +470,7 @@ function Lightbox({
                 alt={item.caption || item.mediaId}
                 className="max-w-full max-h-[85vh] object-contain rounded"
                 draggable={false}
+                crossOrigin="anonymous"
               />
             ) : item.type === 'video' && item.originalUrl ? (
               <video
@@ -477,6 +480,7 @@ function Lightbox({
                 autoPlay
                 className="max-w-full max-h-[85vh] rounded"
                 onClick={(e) => e.stopPropagation()}
+                crossOrigin="anonymous"
               />
             ) : (
               <div className="text-white text-center py-8">

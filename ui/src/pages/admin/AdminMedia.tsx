@@ -183,6 +183,7 @@ function AdminMediaCard({
               src={thumbUrl}
               alt={item.caption || item.mediaId}
               className="w-full h-full object-cover"
+              crossOrigin="anonymous"
             />
             {item.type === 'video' && (
               <div className="absolute inset-0 flex items-center justify-center">
