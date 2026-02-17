@@ -5,6 +5,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { S3Client } from '@aws-sdk/client-s3';
 import { docClient, MEDIA_TABLE } from '../shared/db';
 import { successResponse, errorResponse, ErrorCodes } from '../shared/response';
+import { verifyGalleryToken } from '../shared/galleryAuth';
 
 const MEDIA_BUCKET = process.env.MEDIA_BUCKET_NAME!;
 const s3 = new S3Client({});
@@ -12,6 +13,15 @@ const PRESIGNED_GET_EXPIRY = 60 * 60; // 1 hour
 
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
+    const authResult = await verifyGalleryToken(event);
+    if (!authResult.valid) {
+      return errorResponse(
+        ErrorCodes.UNAUTHORIZED.code,
+        'Gallery access requires authentication',
+        401
+      );
+    }
+
     const { year, mediaId } = event.pathParameters || {};
 
     if (!year || !mediaId) {

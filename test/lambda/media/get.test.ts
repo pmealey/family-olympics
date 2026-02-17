@@ -9,6 +9,10 @@ jest.mock('../../../lib/lambda/shared/db', () => ({
   MEDIA_TABLE: 'test-media-table',
 }));
 
+jest.mock('../../../lib/lambda/shared/galleryAuth', () => ({
+  verifyGalleryToken: jest.fn().mockResolvedValue({ valid: true }),
+}));
+
 jest.mock('@aws-sdk/s3-request-presigner', () => ({
   getSignedUrl: jest.fn().mockResolvedValue('https://s3.example.com/presigned-url'),
 }));

@@ -17,6 +17,7 @@ export interface Olympics {
   year: number;
   placementPoints: Record<string, number>;
   currentYear?: boolean;
+  hasGalleryPassword?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -76,9 +77,14 @@ export type Score = PlacementScore | JudgeScore;
 
 class ApiClient {
   private baseUrl: string;
+  private galleryToken: string | null = null;
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
+  }
+
+  setGalleryToken(token: string | null): void {
+    this.galleryToken = token;
   }
 
   private async request<T>(
@@ -102,6 +108,10 @@ class ApiClient {
         ...options,
         headers,
       });
+
+      if (response.status === 401) {
+        this.galleryToken = null;
+      }
 
       const data = await response.json();
       return data;
@@ -145,6 +155,7 @@ class ApiClient {
     data: {
       placementPoints?: Record<string, number>;
       currentYear?: boolean;
+      galleryPassword?: string;
     }
   ) {
     return this.request<Olympics>(`/olympics/${year}`, {
@@ -157,6 +168,16 @@ class ApiClient {
     return this.request<{ deleted: boolean }>(`/olympics/${year}`, {
       method: 'DELETE',
     });
+  }
+
+  async validateGalleryPassword(year: number, password: string) {
+    return this.request<{ token: string; expiresAt: number }>(
+      `/olympics/${year}/gallery/validate`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ password }),
+      }
+    );
   }
 
   // Teams endpoints
@@ -347,7 +368,14 @@ class ApiClient {
     );
   }
 
-  // Media endpoints
+  // Media endpoints (send X-Gallery-Token when set for gallery protection)
+  private mediaHeaders(): Record<string, string> | undefined {
+    if (this.galleryToken) {
+      return { 'X-Gallery-Token': this.galleryToken };
+    }
+    return undefined;
+  }
+
   async requestMediaUploadUrl(
     year: number,
     data: {
@@ -358,13 +386,22 @@ class ApiClient {
       tags?: { eventId?: string; teamId?: string; persons?: string[] };
       uploadedBy?: string;
       caption?: string;
+      thumbnailExt?: string;
+      displayExt?: string;
     }
   ) {
-    return this.request<{ uploadUrl: string; mediaId: string; expiresIn: number }>(
+    return this.request<{
+      uploadUrl: string;
+      thumbnailUploadUrl?: string;
+      displayUploadUrl?: string;
+      mediaId: string;
+      expiresIn: number;
+    }>(
       `/olympics/${year}/media/upload-url`,
       {
         method: 'POST',
         body: JSON.stringify(data),
+        headers: this.mediaHeaders(),
       }
     );
   }
@@ -380,20 +417,22 @@ class ApiClient {
     if (params?.status) searchParams.append('status', params.status);
     const qs = searchParams.toString();
     return this.request<{ media: MediaItem[] }>(
-      `/olympics/${year}/media${qs ? `?${qs}` : ''}`
+      `/olympics/${year}/media${qs ? `?${qs}` : ''}`,
+      { headers: this.mediaHeaders() }
     );
   }
 
   async getMedia(year: number, mediaId: string) {
     return this.request<MediaItem>(
-      `/olympics/${year}/media/${encodeURIComponent(mediaId)}`
+      `/olympics/${year}/media/${encodeURIComponent(mediaId)}`,
+      { headers: this.mediaHeaders() }
     );
   }
 
   async deleteMedia(year: number, mediaId: string) {
     return this.request<{ deleted: boolean }>(
       `/olympics/${year}/media/${encodeURIComponent(mediaId)}`,
-      { method: 'DELETE' }
+      { method: 'DELETE', headers: this.mediaHeaders() }
     );
   }
 }

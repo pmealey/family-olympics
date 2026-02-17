@@ -91,6 +91,22 @@ export class FamilyOlympicsStack extends cdk.Stack {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
       autoDeleteObjects: false,
+      cors: [
+        {
+          id: 'MediaBucketCors',
+          allowedMethods: [
+            s3.HttpMethods.GET,
+            s3.HttpMethods.PUT,
+            s3.HttpMethods.HEAD,
+          ],
+          allowedOrigins: [
+            'https://www.aureliansystems.io',
+            'https://aureliansystems.io',
+            'http://localhost:5173',
+          ],
+          allowedHeaders: ['*'],
+        },
+      ],
       lifecycleRules: [
         {
           id: 'AbortIncompleteMultipartUploads',
@@ -273,29 +289,20 @@ export class FamilyOlympicsStack extends cdk.Stack {
       ...bundlingConfig,
     });
 
-    // Sharp layer: run "npm run build:sharp-layer" once so lambda-layers/sharp/nodejs/node_modules/sharp exists.
-    // sharp has native bindings; the layer provides the Linux binary so we don't need Docker.
-    const sharpLayer = new lambda.LayerVersion(this, 'SharpLayer', {
-      code: lambda.Code.fromAsset(join(__dirname, 'lambda-layers/sharp')),
-      compatibleRuntimes: [lambda.Runtime.NODEJS_20_X],
-      description: 'sharp for image processing on Lambda (Linux x64)',
-    });
+    const validateGalleryPasswordHandler = new nodejs.NodejsFunction(
+      this,
+      'ValidateGalleryPasswordHandler',
+      {
+        entry: join(__dirname, 'lambda/gallery/validate.ts'),
+        environment: lambdaEnvironment,
+        ...bundlingConfig,
+      }
+    );
 
     const processMediaHandler = new nodejs.NodejsFunction(this, 'ProcessMediaHandler', {
       entry: join(__dirname, 'lambda/media/process.ts'),
       environment: lambdaEnvironment,
-      runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'index.handler',
-      timeout: cdk.Duration.minutes(1),
-      memorySize: 1024,
-      layers: [sharpLayer],
-      bundling: {
-        minify: false,
-        sourceMap: true,
-        externalModules: ['@aws-sdk', 'sharp'],
-        forceDockerBundling: false,
-        format: nodejs.OutputFormat.CJS,
-      },
+      ...bundlingConfig,
     });
 
     // ============================================
@@ -332,7 +339,15 @@ export class FamilyOlympicsStack extends cdk.Stack {
     // Cross-table: SubmitJudgeScoreHandler reads Events to validate event exists and not completed
     eventsTable.grantReadData(submitJudgeScoreHandler);
 
-    // Media: DynamoDB and S3
+    // Gallery password validation
+    olympicsTable.grantReadData(validateGalleryPasswordHandler);
+
+    // Media: DynamoDB and S3 (media handlers also need Olympics read for gallery token verification)
+    olympicsTable.grantReadData(requestUploadUrlHandler);
+    olympicsTable.grantReadData(listMediaHandler);
+    olympicsTable.grantReadData(getMediaHandler);
+    olympicsTable.grantReadData(deleteMediaHandler);
+
     mediaTable.grantReadWriteData(requestUploadUrlHandler);
     mediaTable.grantReadData(listMediaHandler);
     mediaTable.grantReadData(getMediaHandler);
@@ -361,7 +376,7 @@ export class FamilyOlympicsStack extends cdk.Stack {
       defaultCorsPreflightOptions: {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
         allowMethods: apigateway.Cors.ALL_METHODS,
-        allowHeaders: ['Content-Type', 'X-Admin-Token'],
+        allowHeaders: ['Content-Type', 'X-Admin-Token', 'X-Gallery-Token'],
       },
     });
 
@@ -377,6 +392,11 @@ export class FamilyOlympicsStack extends cdk.Stack {
     olympicsYear.addMethod('GET', new apigateway.LambdaIntegration(getOlympicsHandler));
     olympicsYear.addMethod('PUT', new apigateway.LambdaIntegration(updateOlympicsHandler));
     olympicsYear.addMethod('DELETE', new apigateway.LambdaIntegration(deleteOlympicsHandler));
+
+    // Gallery password validation
+    const olympicsYearGallery = olympicsYear.addResource('gallery');
+    const galleryValidate = olympicsYearGallery.addResource('validate');
+    galleryValidate.addMethod('POST', new apigateway.LambdaIntegration(validateGalleryPasswordHandler));
 
     // Teams routes
     const olympicsYearTeams = olympicsYear.addResource('teams');

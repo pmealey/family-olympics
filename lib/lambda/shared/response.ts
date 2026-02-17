@@ -19,7 +19,7 @@ export function successResponse<T>(data: T, statusCode: number = 200) {
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Content-Type, X-Admin-Token',
+      'Access-Control-Allow-Headers': 'Content-Type, X-Admin-Token, X-Gallery-Token',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     },
     body: JSON.stringify({
@@ -39,7 +39,7 @@ export function errorResponse(
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Content-Type, X-Admin-Token',
+      'Access-Control-Allow-Headers': 'Content-Type, X-Admin-Token, X-Gallery-Token',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     },
     body: JSON.stringify({

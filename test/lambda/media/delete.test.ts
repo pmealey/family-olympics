@@ -1,12 +1,17 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import { handler } from '../../../lib/lambda/media/delete';
 import { docClient } from '../../../lib/lambda/shared/db';
+import { verifyGalleryToken } from '../../../lib/lambda/shared/galleryAuth';
 
 jest.mock('../../../lib/lambda/shared/db', () => ({
   docClient: {
     send: jest.fn(),
   },
   MEDIA_TABLE: 'test-media-table',
+}));
+
+jest.mock('../../../lib/lambda/shared/galleryAuth', () => ({
+  verifyGalleryToken: jest.fn().mockResolvedValue({ valid: true }),
 }));
 
 jest.mock('@aws-sdk/client-s3', () => {
@@ -75,5 +80,21 @@ describe('Media Delete Handler', () => {
     const body = JSON.parse(result.body);
     expect(body.success).toBe(false);
     expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('should return 401 when gallery token is invalid', async () => {
+    (verifyGalleryToken as jest.Mock).mockResolvedValueOnce({ valid: false });
+
+    const event = {
+      pathParameters: { year: '2025', mediaId: 'media-1' },
+    } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
+
+    const result = await handler(event);
+
+    expect(result.statusCode).toBe(401);
+    const body = JSON.parse(result.body);
+    expect(body.success).toBe(false);
+    expect(body.error.code).toBe('UNAUTHORIZED');
+    expect(docClient.send).not.toHaveBeenCalled();
   });
 });

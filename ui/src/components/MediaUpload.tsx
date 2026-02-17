@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Button, Card, CardBody, Input, Select } from './index';
 import { apiClient } from '../lib/api';
+import { resizeImage, captureVideoThumbnail, extForType } from '../lib/imageResize';
 import type { Event, Team } from '../lib/api';
 
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024; // 20MB
@@ -11,7 +12,7 @@ const VIDEO_MIMES = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/w
 
 function getFileType(mime: string): 'image' | 'video' {
   if (IMAGE_MIMES.includes(mime)) return 'image';
-  if (VIDEO_MIMES.some((v) => mime.startsWith('video/'))) return 'video';
+  if (VIDEO_MIMES.some(() => mime.startsWith('video/'))) return 'video';
   if (mime.startsWith('image/')) return 'image';
   return 'video';
 }
@@ -24,9 +25,7 @@ export interface MediaUploadProps {
   year: number;
   events: Event[];
   teams: Team[];
-  /** Pre-selected event ID (e.g. from EventDetail) */
   initialEventId?: string;
-  /** Pre-selected team ID (e.g. from TeamDetail) */
   initialTeamId?: string;
   onUploadComplete?: () => void;
   className?: string;
@@ -34,10 +33,24 @@ export interface MediaUploadProps {
 
 interface FileProgress {
   file: File;
-  status: 'pending' | 'uploading' | 'done' | 'error';
+  status: 'pending' | 'resizing' | 'uploading' | 'done' | 'error';
   progress: number;
   error?: string;
   mediaId?: string;
+}
+
+function uploadBlob(url: string, blob: Blob, contentType: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.addEventListener('load', () => {
+      if (xhr.status >= 200 && xhr.status < 300) resolve();
+      else reject(new Error(`Upload failed: ${xhr.status}`));
+    });
+    xhr.addEventListener('error', () => reject(new Error('Network error')));
+    xhr.open('PUT', url);
+    xhr.setRequestHeader('Content-Type', contentType);
+    xhr.send(blob);
+  });
 }
 
 export const MediaUpload: React.FC<MediaUploadProps> = ({
@@ -87,16 +100,46 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
     setFiles((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
+  const updateFile = (index: number, update: Partial<FileProgress>) => {
+    setFiles((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], ...update };
+      return next;
+    });
+  };
+
   const uploadOne = useCallback(
     async (fp: FileProgress, index: number): Promise<void> => {
       const type = getFileType(fp.file.type);
-      setFiles((prev) => {
-        const next = [...prev];
-        next[index] = { ...next[index], status: 'uploading', progress: 0 };
-        return next;
-      });
+      const isImage = type === 'image';
 
       try {
+        // Step 1: generate thumbnail (+ display for images) client-side
+        let thumbnailBlob: Blob | undefined;
+        let displayBlob: Blob | undefined;
+        let thumbnailExt: string | undefined;
+        let displayExt: string | undefined;
+
+        updateFile(index, { status: 'resizing', progress: 0 });
+        try {
+          if (isImage) {
+            const resized = await resizeImage(fp.file);
+            thumbnailBlob = resized.thumbnail;
+            displayBlob = resized.display;
+            thumbnailExt = extForType(resized.thumbnailType);
+            displayExt = extForType(resized.displayType);
+          } else {
+            const videoThumb = await captureVideoThumbnail(fp.file);
+            thumbnailBlob = videoThumb.thumbnail;
+            thumbnailExt = extForType(videoThumb.thumbnailType);
+          }
+        } catch (err) {
+          console.warn('Client-side thumbnail generation failed, uploading original only:', err);
+        }
+
+        // Step 2: get presigned URLs
+        updateFile(index, { status: 'uploading', progress: 5 });
+
         const res = await apiClient.requestMediaUploadUrl(year, {
           fileName: fp.file.name,
           fileSize: fp.file.size,
@@ -109,90 +152,54 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
           },
           ...(uploadedBy.trim() && { uploadedBy: uploadedBy.trim() }),
           ...(caption.trim() && { caption: caption.trim() }),
+          ...(thumbnailExt && { thumbnailExt }),
+          ...(displayExt && { displayExt }),
         });
 
         if (!res.success || !res.data?.uploadUrl) {
-          setFiles((prev) => {
-            const next = [...prev];
-            next[index] = {
-              ...next[index],
-              status: 'error',
-              error: res.error?.message ?? 'Failed to get upload URL',
-            };
-            return next;
+          updateFile(index, {
+            status: 'error',
+            error: res.error?.message ?? 'Failed to get upload URL',
           });
           return;
         }
 
-        const { uploadUrl } = res.data;
+        const { uploadUrl, thumbnailUploadUrl, displayUploadUrl, mediaId } = res.data;
 
+        // Step 3: upload original with progress tracking
         await new Promise<void>((resolve, reject) => {
           const xhr = new XMLHttpRequest();
-
           xhr.upload.addEventListener('progress', (e) => {
             if (e.lengthComputable) {
-              const pct = Math.round((e.loaded / e.total) * 100);
-              setFiles((prev) => {
-                const next = [...prev];
-                next[index] = { ...next[index], progress: pct };
-                return next;
-              });
+              const pct = Math.round((e.loaded / e.total) * 80) + 10; // 10-90%
+              updateFile(index, { progress: pct });
             }
           });
-
           xhr.addEventListener('load', () => {
-            if (xhr.status >= 200 && xhr.status < 300) {
-              setFiles((prev) => {
-                const next = [...prev];
-                next[index] = {
-                  ...next[index],
-                  status: 'done',
-                  progress: 100,
-                  mediaId: res.data?.mediaId,
-                };
-                return next;
-              });
-              resolve();
-            } else {
-              setFiles((prev) => {
-                const next = [...prev];
-                next[index] = {
-                  ...next[index],
-                  status: 'error',
-                  error: `Upload failed: ${xhr.status}`,
-                };
-                return next;
-              });
-              reject(new Error(`Upload failed: ${xhr.status}`));
-            }
+            if (xhr.status >= 200 && xhr.status < 300) resolve();
+            else reject(new Error(`Upload failed: ${xhr.status}`));
           });
-
-          xhr.addEventListener('error', () => {
-            setFiles((prev) => {
-              const next = [...prev];
-              next[index] = {
-                ...next[index],
-                status: 'error',
-                error: 'Network error',
-              };
-              return next;
-            });
-            reject(new Error('Network error'));
-          });
-
+          xhr.addEventListener('error', () => reject(new Error('Network error')));
           xhr.open('PUT', uploadUrl);
           xhr.setRequestHeader('Content-Type', fp.file.type);
           xhr.send(fp.file);
         });
+
+        // Step 4: upload thumbnail and display (small, no progress tracking needed)
+        if (thumbnailBlob && thumbnailUploadUrl) {
+          await uploadBlob(thumbnailUploadUrl, thumbnailBlob, thumbnailBlob.type);
+        }
+        updateFile(index, { progress: 95 });
+
+        if (displayBlob && displayUploadUrl) {
+          await uploadBlob(displayUploadUrl, displayBlob, displayBlob.type);
+        }
+
+        updateFile(index, { status: 'done', progress: 100, mediaId });
       } catch (err) {
-        setFiles((prev) => {
-          const next = [...prev];
-          next[index] = {
-            ...next[index],
-            status: 'error',
-            error: err instanceof Error ? err.message : 'Upload failed',
-          };
-          return next;
+        updateFile(index, {
+          status: 'error',
+          error: err instanceof Error ? err.message : 'Upload failed',
         });
       }
     },
@@ -233,6 +240,7 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
 
   const pendingCount = files.filter((f) => f.status === 'pending').length;
   const hasPending = pendingCount > 0;
+  const isUploading = files.some((f) => f.status === 'uploading' || f.status === 'resizing');
 
   return (
     <Card className={className}>
@@ -354,6 +362,9 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
                     Remove
                   </Button>
                 )}
+                {fp.status === 'resizing' && (
+                  <span className="text-sm text-winter-gray">Resizing...</span>
+                )}
                 {fp.status === 'uploading' && (
                   <div className="flex-1 max-w-[120px] h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div
@@ -363,7 +374,7 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
                   </div>
                 )}
                 {fp.status === 'done' && (
-                  <span className="text-sm text-green-600">✓ Uploaded</span>
+                  <span className="text-sm text-green-600">Uploaded</span>
                 )}
                 {fp.status === 'error' && (
                   <span className="text-sm text-red-600">{fp.error}</span>
@@ -377,7 +388,7 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
           <Button
             className="mt-4"
             onClick={startUploads}
-            loading={files.some((f) => f.status === 'uploading')}
+            loading={isUploading}
           >
             Upload {pendingCount} file{pendingCount !== 1 ? 's' : ''}
           </Button>

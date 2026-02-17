@@ -5,6 +5,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
 import { docClient, MEDIA_TABLE } from '../shared/db';
 import { successResponse, errorResponse, ErrorCodes } from '../shared/response';
+import { verifyGalleryToken } from '../shared/galleryAuth';
 
 const MEDIA_BUCKET = process.env.MEDIA_BUCKET_NAME!;
 const PRESIGNED_URL_EXPIRY_SECONDS = 15 * 60; // 15 minutes
@@ -19,6 +20,15 @@ function getExtension(fileName: string): string {
 
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
+    const authResult = await verifyGalleryToken(event);
+    if (!authResult.valid) {
+      return errorResponse(
+        ErrorCodes.UNAUTHORIZED.code,
+        'Gallery access requires authentication',
+        401
+      );
+    }
+
     const { year } = event.pathParameters || {};
 
     if (!year) {
@@ -45,9 +55,11 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       tags?: { eventId?: string; teamId?: string; persons?: string[] };
       uploadedBy?: string;
       caption?: string;
+      thumbnailExt?: string;
+      displayExt?: string;
     };
 
-    const { fileName, fileSize, mimeType, type, tags, uploadedBy, caption } = body;
+    const { fileName, fileSize, mimeType, type, tags, uploadedBy, caption, thumbnailExt, displayExt } = body;
 
     if (!fileName?.trim() || fileSize == null || !mimeType?.trim() || !type) {
       return errorResponse(
@@ -88,14 +100,53 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const originalKey = `${yearNum}/originals/${mediaId}.${ext}`;
 
     const s3 = new S3Client({});
-    const putCommand = new PutObjectCommand({
-      Bucket: MEDIA_BUCKET,
-      Key: originalKey,
-      ContentType: mimeType.trim(),
-      ContentLength: fileSize,
-    });
 
-    const uploadUrl = await getSignedUrl(s3, putCommand, { expiresIn: PRESIGNED_URL_EXPIRY_SECONDS });
+    // Generate presigned URL for original
+    const originalUploadUrl = await getSignedUrl(
+      s3,
+      new PutObjectCommand({
+        Bucket: MEDIA_BUCKET,
+        Key: originalKey,
+        ContentType: mimeType.trim(),
+      }),
+      { expiresIn: PRESIGNED_URL_EXPIRY_SECONDS }
+    );
+
+    // Generate presigned URLs for thumbnail (images + videos) and display (images only)
+    let thumbnailUploadUrl: string | undefined;
+    let displayUploadUrl: string | undefined;
+    let thumbnailKey: string | undefined;
+    let displayKey: string | undefined;
+
+    const thumbExt = thumbnailExt || 'webp';
+    const thumbMime = thumbExt === 'png' ? 'image/png' : thumbExt === 'webp' ? 'image/webp' : 'image/jpeg';
+    thumbnailKey = `${yearNum}/thumbnails/${mediaId}.${thumbExt}`;
+
+    thumbnailUploadUrl = await getSignedUrl(
+      s3,
+      new PutObjectCommand({
+        Bucket: MEDIA_BUCKET,
+        Key: thumbnailKey,
+        ContentType: thumbMime,
+      }),
+      { expiresIn: PRESIGNED_URL_EXPIRY_SECONDS }
+    );
+
+    if (type === 'image') {
+      const dispExt = displayExt || 'webp';
+      const dispMime = dispExt === 'png' ? 'image/png' : dispExt === 'webp' ? 'image/webp' : 'image/jpeg';
+      displayKey = `${yearNum}/display/${mediaId}.${dispExt}`;
+
+      displayUploadUrl = await getSignedUrl(
+        s3,
+        new PutObjectCommand({
+          Bucket: MEDIA_BUCKET,
+          Key: displayKey,
+          ContentType: dispMime,
+        }),
+        { expiresIn: PRESIGNED_URL_EXPIRY_SECONDS }
+      );
+    }
 
     const now = new Date().toISOString();
     const eventId = tags?.eventId?.trim() || undefined;
@@ -108,6 +159,8 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       type,
       status: 'pending',
       originalKey,
+      ...(thumbnailKey && { thumbnailKey }),
+      ...(displayKey && { displayKey }),
       mimeType: mimeType.trim(),
       fileSize,
       uploadedBy: uploadedBy?.trim() || undefined,
@@ -129,7 +182,9 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     return successResponse(
       {
-        uploadUrl,
+        uploadUrl: originalUploadUrl,
+        ...(thumbnailUploadUrl && { thumbnailUploadUrl }),
+        ...(displayUploadUrl && { displayUploadUrl }),
         mediaId,
         expiresIn: PRESIGNED_URL_EXPIRY_SECONDS,
       },

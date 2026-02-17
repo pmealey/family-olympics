@@ -1,5 +1,7 @@
+import { randomBytes } from 'crypto';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { UpdateCommand, GetCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
+import * as bcrypt from 'bcryptjs';
 import { docClient, OLYMPICS_TABLE } from '../shared/db';
 import { successResponse, errorResponse, ErrorCodes } from '../shared/response';
 
@@ -7,6 +9,7 @@ interface UpdateOlympicsRequest {
   eventName?: string;
   placementPoints?: Record<string, number>;
   currentYear?: boolean;
+  galleryPassword?: string;
 }
 
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
@@ -72,34 +75,52 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       }
     }
 
-    // Build update expression
-    const updates: string[] = [];
-    const attributeValues: Record<string, any> = {
+    // Build update expression (SET and REMOVE)
+    const setUpdates: string[] = ['updatedAt = :now'];
+    const removeAttrs: string[] = [];
+    const attributeValues: Record<string, unknown> = {
       ':now': new Date().toISOString(),
     };
 
     if (body.eventName !== undefined) {
-      updates.push('eventName = :eventName');
+      setUpdates.push('eventName = :eventName');
       attributeValues[':eventName'] = body.eventName;
     }
 
     if (body.placementPoints !== undefined) {
-      updates.push('placementPoints = :placementPoints');
+      setUpdates.push('placementPoints = :placementPoints');
       attributeValues[':placementPoints'] = body.placementPoints;
     }
 
     if (body.currentYear !== undefined) {
-      updates.push('currentYear = :currentYear');
+      setUpdates.push('currentYear = :currentYear');
       attributeValues[':currentYear'] = body.currentYear;
     }
 
-    updates.push('updatedAt = :now');
+    // Gallery password: empty string = clear protection; non-empty = set hash + secret
+    if (body.galleryPassword !== undefined) {
+      if (body.galleryPassword === '') {
+        removeAttrs.push('galleryPasswordHash', 'galleryTokenSecret');
+      } else {
+        const galleryPasswordHash = await bcrypt.hash(body.galleryPassword, 10);
+        const galleryTokenSecret = randomBytes(32).toString('hex');
+        setUpdates.push('galleryPasswordHash = :galleryPasswordHash');
+        setUpdates.push('galleryTokenSecret = :galleryTokenSecret');
+        attributeValues[':galleryPasswordHash'] = galleryPasswordHash;
+        attributeValues[':galleryTokenSecret'] = galleryTokenSecret;
+      }
+    }
+
+    let updateExpression = `SET ${setUpdates.join(', ')}`;
+    if (removeAttrs.length > 0) {
+      updateExpression += ` REMOVE ${removeAttrs.join(', ')}`;
+    }
 
     const result = await docClient.send(
       new UpdateCommand({
         TableName: OLYMPICS_TABLE,
         Key: { year: parseInt(year) },
-        UpdateExpression: `SET ${updates.join(', ')}`,
+        UpdateExpression: updateExpression,
         ExpressionAttributeValues: attributeValues,
         ReturnValues: 'ALL_NEW',
       })

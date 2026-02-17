@@ -11,6 +11,10 @@ jest.mock('../../../lib/lambda/shared/db', () => ({
   OLYMPICS_TABLE: 'test-olympics-table',
 }));
 
+jest.mock('bcryptjs', () => ({
+  hash: jest.fn().mockResolvedValue('$2a$10$mockedhash'),
+}));
+
 describe('Olympics Update Handler', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -151,6 +155,66 @@ describe('Olympics Update Handler', () => {
     const body = JSON.parse(result.body);
     expect(body.success).toBe(false);
     expect(body.error.code).toBe('INTERNAL_ERROR');
+  });
+
+  it('should set gallery password and secret when galleryPassword provided', async () => {
+    (docClient.send as jest.Mock)
+      .mockResolvedValueOnce({
+        Item: { year: 2025, placementPoints: { '1': 4, '2': 3 }, currentYear: true },
+      })
+      .mockResolvedValueOnce({
+        Attributes: {
+          year: 2025,
+          placementPoints: { '1': 4, '2': 3 },
+          currentYear: true,
+          galleryPasswordHash: '$2a$10$mockedhash',
+          galleryTokenSecret: 'a'.repeat(64),
+          updatedAt: new Date().toISOString(),
+        },
+      });
+
+    const event = {
+      pathParameters: { year: '2025' },
+      body: JSON.stringify({ galleryPassword: 'new-secret' }),
+    } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
+
+    const result = await handler(event);
+
+    expect(result.statusCode).toBe(200);
+    const body = JSON.parse(result.body);
+    expect(body.success).toBe(true);
+    expect(body.data.galleryPasswordHash).toBe('$2a$10$mockedhash');
+    expect(body.data.galleryTokenSecret).toHaveLength(64);
+  });
+
+  it('should remove gallery password when galleryPassword is empty string', async () => {
+    (docClient.send as jest.Mock)
+      .mockResolvedValueOnce({
+        Item: {
+          year: 2025,
+          galleryPasswordHash: '$2a$10$old',
+          galleryTokenSecret: 'old-secret',
+        },
+      })
+      .mockResolvedValueOnce({
+        Attributes: {
+          year: 2025,
+          updatedAt: new Date().toISOString(),
+        },
+      });
+
+    const event = {
+      pathParameters: { year: '2025' },
+      body: JSON.stringify({ galleryPassword: '' }),
+    } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
+
+    const result = await handler(event);
+
+    expect(result.statusCode).toBe(200);
+    const body = JSON.parse(result.body);
+    expect(body.success).toBe(true);
+    expect(body.data.galleryPasswordHash).toBeUndefined();
+    expect(body.data.galleryTokenSecret).toBeUndefined();
   });
 });
 

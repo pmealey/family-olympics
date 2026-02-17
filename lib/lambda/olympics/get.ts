@@ -28,8 +28,9 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
         );
       }
 
-      const olympics = result.Items[0];
-      return successResponse(olympics);
+      const item = result.Items[0] as Record<string, unknown>;
+      const { galleryTokenSecret, galleryPasswordHash, ...rest } = item;
+      return successResponse({ ...rest, hasGalleryPassword: !!galleryPasswordHash });
     }
 
     // GET /olympics/:year - Get specific year
@@ -49,7 +50,9 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
         );
       }
 
-      return successResponse(result.Item);
+      const item = result.Item as Record<string, unknown>;
+      const { galleryTokenSecret, galleryPasswordHash, ...rest } = item;
+      return successResponse({ ...rest, hasGalleryPassword: !!galleryPasswordHash });
     }
 
     // GET /olympics - List all years

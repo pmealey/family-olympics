@@ -17,4 +17,5 @@ export { Toast, useToast } from './Toast';
 export type { ToastType } from './Toast';
 export { MediaUpload } from './MediaUpload';
 export type { MediaUploadProps } from './MediaUpload';
+export { GalleryPasswordPrompt } from './GalleryPasswordPrompt';
 

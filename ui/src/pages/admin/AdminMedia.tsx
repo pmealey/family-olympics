@@ -2,7 +2,7 @@
  * Admin Media Management - view and delete media
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   CardBody,
@@ -10,29 +10,58 @@ import {
   Loading,
   EmptyState,
   RefreshButton,
+  GalleryPasswordPrompt,
 } from '../../components';
 import { useAdmin } from '../../contexts/AdminContext';
-import { useListMedia, useMutation } from '../../hooks/useApi';
+import { useMutation } from '../../hooks/useApi';
+import { useGalleryAuth } from '../../hooks/useGalleryAuth';
 import { apiClient } from '../../lib/api';
 import type { MediaItem } from '../../lib/api';
 
 export const AdminMedia: React.FC = () => {
-  const { currentYear } = useAdmin();
+  const { currentYear, currentOlympics } = useAdmin();
+  const galleryAuth = useGalleryAuth(currentYear);
+  const { token, authError, authenticate, isAuthenticated } = galleryAuth;
+
+  // Sync gallery token to API client during render
+  apiClient.setGalleryToken(token);
+
+  const needsPassword = currentOlympics?.hasGalleryPassword === true && !isAuthenticated;
+
   const [statusFilter, setStatusFilter] = useState<string>('');
-  const {
-    data: mediaData,
-    loading: mediaLoading,
-    error: mediaError,
-    execute: refetchMedia,
-  } = useListMedia(currentYear ?? null, {
-    ...(statusFilter && { status: statusFilter }),
-  });
+  const [media, setMedia] = useState<MediaItem[]>([]);
+  const [mediaLoading, setMediaLoading] = useState(false);
+  const [mediaError, setMediaError] = useState<string | null>(null);
+
+  const fetchMedia = useCallback(async () => {
+    if (!currentYear) return;
+    setMediaLoading(true);
+    setMediaError(null);
+    try {
+      const params = statusFilter ? { status: statusFilter } : undefined;
+      const res = await apiClient.listMedia(currentYear, params);
+      if (res.success && res.data) {
+        setMedia(res.data.media);
+      } else {
+        setMediaError(res.error?.message ?? 'Failed to load media');
+      }
+    } catch (err) {
+      setMediaError(err instanceof Error ? err.message : 'Failed to load media');
+    } finally {
+      setMediaLoading(false);
+    }
+  }, [currentYear, statusFilter]);
+
+  // Fetch media when we have a year + are authenticated (or gallery is open)
+  useEffect(() => {
+    if (currentYear && !needsPassword) {
+      fetchMedia();
+    }
+  }, [currentYear, needsPassword, fetchMedia]);
 
   const { mutate: deleteMedia, loading: deleteLoading } = useMutation(
     (year: number, mediaId: string) => apiClient.deleteMedia(year, mediaId)
   );
-
-  const media = mediaData?.media ?? [];
 
   if (!currentYear) {
     return (
@@ -51,11 +80,36 @@ export const AdminMedia: React.FC = () => {
     );
   }
 
+  if (needsPassword) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-xl font-display font-bold">Media</h2>
+        <Card>
+          <CardBody>
+            <p className="text-winter-dark mb-3">
+              The gallery for {currentYear} is password-protected. Enter the gallery password to view and manage media.
+            </p>
+            <GalleryPasswordPrompt
+              onSubmit={async (password) => {
+                const ok = await authenticate(
+                  password,
+                  (y, p) => apiClient.validateGalleryPassword(y, p)
+                );
+                return ok;
+              }}
+              error={authError}
+            />
+          </CardBody>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-display font-bold">Media</h2>
-        <RefreshButton onRefresh={refetchMedia} />
+        <RefreshButton onRefresh={fetchMedia} />
       </div>
 
       {mediaError && (
@@ -81,6 +135,9 @@ export const AdminMedia: React.FC = () => {
               <option value="ready">Ready</option>
               <option value="failed">Failed</option>
             </select>
+            <span className="text-sm text-winter-gray">
+              {media.length} item{media.length !== 1 ? 's' : ''}
+            </span>
           </div>
 
           {mediaLoading ? (
@@ -99,10 +156,9 @@ export const AdminMedia: React.FC = () => {
                 <AdminMediaCard
                   key={item.mediaId}
                   item={item}
-                  year={currentYear}
                   onDelete={async () => {
                     const result = await deleteMedia(currentYear, item.mediaId);
-                    if (result) await refetchMedia();
+                    if (result) await fetchMedia();
                   }}
                   deleteLoading={deleteLoading}
                 />
@@ -117,12 +173,10 @@ export const AdminMedia: React.FC = () => {
 
 function AdminMediaCard({
   item,
-  year,
   onDelete,
   deleteLoading,
 }: {
   item: MediaItem;
-  year: number;
   onDelete: () => Promise<void>;
   deleteLoading: boolean;
 }) {
@@ -138,17 +192,26 @@ function AdminMediaCard({
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
       <div className="aspect-square bg-gray-100 relative">
-        {isReady && thumbUrl && item.type === 'image' ? (
-          <img
-            src={thumbUrl}
-            alt={item.caption || item.mediaId}
-            className="w-full h-full object-cover"
-          />
-        ) : item.type === 'video' ? (
-          <div className="w-full h-full flex items-center justify-center text-4xl">▶️</div>
+        {isReady && thumbUrl ? (
+          <div className="relative w-full h-full">
+            <img
+              src={thumbUrl}
+              alt={item.caption || item.mediaId}
+              className="w-full h-full object-cover"
+            />
+            {item.type === 'video' && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center">
+                  <span className="text-white text-lg ml-0.5">▶</span>
+                </div>
+              </div>
+            )}
+          </div>
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center text-winter-gray text-sm p-2">
-            <span>{item.status === 'pending' || item.status === 'processing' ? '⏳' : '❌'}</span>
+            <span className="text-2xl mb-1">
+              {item.status === 'pending' || item.status === 'processing' ? '⏳' : '❌'}
+            </span>
             <span className="capitalize text-xs">{item.status}</span>
           </div>
         )}
@@ -163,6 +226,11 @@ function AdminMediaCard({
         >
           {item.status}
         </span>
+        {item.type === 'video' && (
+          <span className="absolute top-2 left-2 px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+            Video
+          </span>
+        )}
       </div>
       <div className="p-3">
         <p className="text-xs text-winter-gray truncate" title={item.mediaId}>
@@ -171,9 +239,16 @@ function AdminMediaCard({
         {item.caption && (
           <p className="text-sm mt-1 line-clamp-2">{item.caption}</p>
         )}
-        {item.uploadedBy && (
-          <p className="text-xs text-winter-gray mt-0.5">by {item.uploadedBy}</p>
-        )}
+        <div className="flex items-center gap-2 mt-1">
+          {item.uploadedBy && (
+            <p className="text-xs text-winter-gray">by {item.uploadedBy}</p>
+          )}
+          {item.createdAt && (
+            <p className="text-xs text-winter-gray">
+              {new Date(item.createdAt).toLocaleDateString()}
+            </p>
+          )}
+        </div>
         {!confirming ? (
           <Button
             variant="danger"

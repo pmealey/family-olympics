@@ -23,6 +23,11 @@ export const AdminOlympics: React.FC = () => {
   const [showNewYearForm, setShowNewYearForm] = useState(false);
   const [newYear, setNewYear] = useState('');
 
+  // Gallery password
+  const [galleryPassword, setGalleryPassword] = useState('');
+  const [galleryPasswordLoading, setGalleryPasswordLoading] = useState(false);
+  const [galleryPasswordError, setGalleryPasswordError] = useState<string | null>(null);
+
   useEffect(() => {
     if (currentOlympics) {
       setPlacementPoints(currentOlympics.placementPoints);
@@ -35,7 +40,7 @@ export const AdminOlympics: React.FC = () => {
   }, []);
 
   const { mutate: updateOlympics, loading: updateLoading, error: updateError } = useMutation(
-    (year: number, data: { placementPoints?: Record<string, number>; currentYear?: boolean }) =>
+    (year: number, data: { placementPoints?: Record<string, number>; currentYear?: boolean; galleryPassword?: string }) =>
       apiClient.updateOlympics(year, data)
   );
 
@@ -338,6 +343,83 @@ export const AdminOlympics: React.FC = () => {
                 <p className="text-red-600 text-sm">{updateError}</p>
               )}
             </div>
+          </CardBody>
+        </Card>
+      )}
+
+      {/* Gallery password */}
+      {currentOlympics && (
+        <Card>
+          <CardHeader>
+            <h3 className="text-lg font-display font-semibold">Gallery Password</h3>
+          </CardHeader>
+          <CardBody>
+            <p className="text-sm text-winter-gray mb-3">
+              Protect the gallery page with a shared password. Only people with the password can view or upload photos and videos.
+            </p>
+            <p className="text-sm font-medium mb-2">
+              Current: {currentOlympics.hasGalleryPassword ? 'Password set' : 'No password (gallery is open)'}
+            </p>
+            <div className="flex flex-wrap gap-2 items-end">
+              <div className="flex-1 min-w-[200px]">
+                <Input
+                  type="password"
+                  label="New password"
+                  placeholder={currentOlympics.hasGalleryPassword ? 'Leave blank to keep current' : 'Set a password'}
+                  value={galleryPassword}
+                  onChange={(e) => {
+                    setGalleryPassword(e.target.value);
+                    setGalleryPasswordError(null);
+                  }}
+                  disabled={galleryPasswordLoading}
+                  autoComplete="new-password"
+                />
+              </div>
+              <Button
+                onClick={async () => {
+                  if (!currentYear) return;
+                  setGalleryPasswordLoading(true);
+                  setGalleryPasswordError(null);
+                  const result = await updateOlympics(currentYear, { galleryPassword });
+                  setGalleryPasswordLoading(false);
+                  if (result) {
+                    setCurrentOlympics(result);
+                    setGalleryPassword('');
+                    await refreshOlympics();
+                  } else {
+                    setGalleryPasswordError(updateError ?? 'Failed to update');
+                  }
+                }}
+                disabled={galleryPasswordLoading}
+              >
+                {galleryPasswordLoading ? 'Saving...' : 'Set password'}
+              </Button>
+              {currentOlympics.hasGalleryPassword && (
+                <Button
+                  variant="danger"
+                  onClick={async () => {
+                    if (!currentYear || !confirm('Remove the gallery password? Anyone with the link will be able to view the gallery.')) return;
+                    setGalleryPasswordLoading(true);
+                    setGalleryPasswordError(null);
+                    const result = await updateOlympics(currentYear, { galleryPassword: '' });
+                    setGalleryPasswordLoading(false);
+                    if (result) {
+                      setCurrentOlympics(result);
+                      setGalleryPassword('');
+                      await refreshOlympics();
+                    } else {
+                      setGalleryPasswordError(updateError ?? 'Failed to clear password');
+                    }
+                  }}
+                  disabled={galleryPasswordLoading}
+                >
+                  Clear password
+                </Button>
+              )}
+            </div>
+            {galleryPasswordError && (
+              <p className="text-red-600 text-sm mt-2">{galleryPasswordError}</p>
+            )}
           </CardBody>
         </Card>
       )}

@@ -11,7 +11,7 @@
     "test:watch": "jest --config jest.config.backend.js --watch",
     "cdk": "cdk",
     "deploy": "npm run build && npm run build --prefix ui && npx cdk deploy",
-    "build:sharp-layer": "node -e \"require('fs').mkdirSync('lib/lambda-layers/sharp/nodejs', {recursive: true})\" && npm install sharp@0.34.5 --prefix lib/lambda-layers/sharp/nodejs --platform=linux --arch=x64"
+    "lint": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.159",
@@ -34,7 +34,6 @@
     "aws-cdk-lib": "2.232.1",
     "bcryptjs": "^3.0.3",
     "constructs": "^10.0.0",
-    "sharp": "^0.34.5",
     "uuid": "^13.0.0"
   }
 }
