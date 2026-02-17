@@ -1,13 +1,5 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import { handler } from '../../../lib/lambda/media/requestUploadUrl';
-import { docClient } from '../../../lib/lambda/shared/db';
-
-jest.mock('../../../lib/lambda/shared/db', () => ({
-  docClient: {
-    send: jest.fn(),
-  },
-  MEDIA_TABLE: 'test-media-table',
-}));
 
 jest.mock('../../../lib/lambda/shared/galleryAuth', () => ({
   verifyGalleryToken: jest.fn().mockResolvedValue({ valid: true }),
@@ -26,9 +18,7 @@ describe('Media RequestUploadUrl Handler', () => {
     jest.clearAllMocks();
   });
 
-  it('should return presigned URL and create pending media record', async () => {
-    (docClient.send as jest.Mock).mockResolvedValueOnce({});
-
+  it('should return presigned URLs (no DB record — process Lambda creates it when original is uploaded)', async () => {
     const event = {
       pathParameters: { year: '2025' },
       body: JSON.stringify({
@@ -46,13 +36,12 @@ describe('Media RequestUploadUrl Handler', () => {
     expect(body.success).toBe(true);
     expect(body.data.uploadUrl).toBe('https://s3.example.com/presigned-put-url');
     expect(body.data.mediaId).toBe('media-abc-123-uuid');
+    expect(body.data.thumbnailUploadUrl).toBe('https://s3.example.com/presigned-put-url');
+    expect(body.data.displayUploadUrl).toBe('https://s3.example.com/presigned-put-url');
     expect(body.data.expiresIn).toBe(15 * 60);
-    expect(docClient.send).toHaveBeenCalledTimes(1);
   });
 
-  it('should accept optional tags and caption', async () => {
-    (docClient.send as jest.Mock).mockResolvedValueOnce({});
-
+  it('should accept optional tags and caption and return URLs', async () => {
     const event = {
       pathParameters: { year: '2025' },
       body: JSON.stringify({
@@ -69,16 +58,10 @@ describe('Media RequestUploadUrl Handler', () => {
     const result = await handler(event);
 
     expect(result.statusCode).toBe(201);
-    const sendCall = (docClient.send as jest.Mock).mock.calls[0][0];
-    const item = sendCall.input?.Item ?? sendCall.Item;
-    expect(item).toBeDefined();
-    expect(item.year).toBe(2025);
-    expect(item.type).toBe('image');
-    expect(item.status).toBe('pending');
-    expect(item.eventId).toBe('ev-1');
-    expect(item.teamId).toBe('team-1');
-    expect(item.uploadedBy).toBe('Bob');
-    expect(item.caption).toBe('Fun day');
+    const body = JSON.parse(result.body);
+    expect(body.success).toBe(true);
+    expect(body.data.uploadUrl).toBeDefined();
+    expect(body.data.mediaId).toBe('media-abc-123-uuid');
   });
 
   it('should return 400 if body is missing', async () => {
@@ -93,7 +76,6 @@ describe('Media RequestUploadUrl Handler', () => {
     const body = JSON.parse(result.body);
     expect(body.success).toBe(false);
     expect(body.error.code).toBe('VALIDATION_ERROR');
-    expect(docClient.send).not.toHaveBeenCalled();
   });
 
   it('should return 400 if required fields missing', async () => {
@@ -111,6 +93,26 @@ describe('Media RequestUploadUrl Handler', () => {
     const body = JSON.parse(result.body);
     expect(body.success).toBe(false);
     expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('should return only uploadUrl and thumbnailUploadUrl for video (no display)', async () => {
+    const event = {
+      pathParameters: { year: '2025' },
+      body: JSON.stringify({
+        fileName: 'clip.mp4',
+        fileSize: 5 * 1024 * 1024,
+        mimeType: 'video/mp4',
+        type: 'video',
+      }),
+    } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
+
+    const result = await handler(event);
+
+    expect(result.statusCode).toBe(201);
+    const body = JSON.parse(result.body);
+    expect(body.data.uploadUrl).toBeDefined();
+    expect(body.data.thumbnailUploadUrl).toBeDefined();
+    expect(body.data.displayUploadUrl).toBeUndefined();
   });
 
   it('should return 400 if image exceeds 20MB', async () => {

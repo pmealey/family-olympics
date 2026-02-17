@@ -1,9 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { PutCommand } from '@aws-sdk/lib-dynamodb';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
-import { docClient, MEDIA_TABLE } from '../shared/db';
 import { successResponse, errorResponse, ErrorCodes } from '../shared/response';
 import { verifyGalleryToken } from '../shared/galleryAuth';
 
@@ -148,37 +146,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       );
     }
 
-    const now = new Date().toISOString();
-    const eventId = tags?.eventId?.trim() || undefined;
-    const teamId = tags?.teamId?.trim() || undefined;
-    const persons = Array.isArray(tags?.persons) ? tags!.persons!.map((p) => String(p).trim()).filter(Boolean) : undefined;
-
-    const item: Record<string, unknown> = {
-      year: yearNum,
-      mediaId,
-      type,
-      status: 'pending',
-      originalKey,
-      ...(thumbnailKey && { thumbnailKey }),
-      ...(displayKey && { displayKey }),
-      mimeType: mimeType.trim(),
-      fileSize,
-      uploadedBy: uploadedBy?.trim() || undefined,
-      caption: caption?.trim() || undefined,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    if (eventId) item.eventId = eventId;
-    if (teamId) item.teamId = teamId;
-    if (persons?.length) item.tags = { ...(eventId && { eventId }), ...(teamId && { teamId }), persons };
-
-    await docClient.send(
-      new PutCommand({
-        TableName: MEDIA_TABLE,
-        Item: item,
-      })
-    );
+    // No DB record here — process Lambda creates it when the original lands in S3 (with metadata from the upload).
 
     return successResponse(
       {

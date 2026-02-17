@@ -166,12 +166,22 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
 
         const { uploadUrl, thumbnailUploadUrl, displayUploadUrl, mediaId } = res.data;
 
-        // Step 3: upload original with progress tracking
+        // Step 3: upload thumbnail and display first so they exist when the process Lambda runs (on original)
+        if (thumbnailBlob && thumbnailUploadUrl) {
+          await uploadBlob(thumbnailUploadUrl, thumbnailBlob, thumbnailBlob.type);
+        }
+        updateFile(index, { progress: 40 });
+        if (displayBlob && displayUploadUrl) {
+          await uploadBlob(displayUploadUrl, displayBlob, displayBlob.type);
+        }
+        updateFile(index, { progress: 50 });
+
+        // Step 4: upload original with metadata (process Lambda creates the DB record from this)
         await new Promise<void>((resolve, reject) => {
           const xhr = new XMLHttpRequest();
           xhr.upload.addEventListener('progress', (e) => {
             if (e.lengthComputable) {
-              const pct = Math.round((e.loaded / e.total) * 80) + 10; // 10-90%
+              const pct = 50 + Math.round((e.loaded / e.total) * 50); // 50-100%
               updateFile(index, { progress: pct });
             }
           });
@@ -182,18 +192,16 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
           xhr.addEventListener('error', () => reject(new Error('Network error')));
           xhr.open('PUT', uploadUrl);
           xhr.setRequestHeader('Content-Type', fp.file.type);
+          // Metadata for process Lambda (S3 stores as x-amz-meta-*, returned lowercase)
+          if (caption.trim()) xhr.setRequestHeader('x-amz-meta-caption', caption.trim());
+          if (uploadedBy.trim()) xhr.setRequestHeader('x-amz-meta-uploadedby', uploadedBy.trim());
+          if (eventId) xhr.setRequestHeader('x-amz-meta-eventid', eventId);
+          if (teamId) xhr.setRequestHeader('x-amz-meta-teamid', teamId);
+          if (persons.length > 0) xhr.setRequestHeader('x-amz-meta-persons', JSON.stringify(persons));
+          if (thumbnailExt) xhr.setRequestHeader('x-amz-meta-thumbnailext', thumbnailExt);
+          if (displayExt) xhr.setRequestHeader('x-amz-meta-displayext', displayExt);
           xhr.send(fp.file);
         });
-
-        // Step 4: upload thumbnail and display (small, no progress tracking needed)
-        if (thumbnailBlob && thumbnailUploadUrl) {
-          await uploadBlob(thumbnailUploadUrl, thumbnailBlob, thumbnailBlob.type);
-        }
-        updateFile(index, { progress: 95 });
-
-        if (displayBlob && displayUploadUrl) {
-          await uploadBlob(displayUploadUrl, displayBlob, displayBlob.type);
-        }
 
         updateFile(index, { status: 'done', progress: 100, mediaId });
       } catch (err) {

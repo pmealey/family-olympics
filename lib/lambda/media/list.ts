@@ -78,7 +78,6 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const eventId = q.eventId?.trim();
     const teamId = q.teamId?.trim();
     const person = q.person?.trim();
-    const status = q.status?.trim();
 
     let items: Record<string, unknown>[];
 
@@ -120,10 +119,6 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
         const persons = tags?.persons;
         return Array.isArray(persons) && persons.some((p) => String(p).toLowerCase().includes(person.toLowerCase()));
       });
-    }
-
-    if (status) {
-      items = items.filter((i) => (i.status as string) === status);
     }
 
     items.sort((a, b) => (b.createdAt as string).localeCompare(a.createdAt as string));

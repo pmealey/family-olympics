@@ -303,7 +303,6 @@ function GalleryThumb({
   onClick: () => void;
 }) {
   const isImage = item.type === 'image';
-  const isReady = item.status === 'ready';
   const thumbUrl = item.thumbnailUrl ?? item.displayUrl;
 
   return (
@@ -312,20 +311,31 @@ function GalleryThumb({
       onClick={onClick}
       className="aspect-square rounded-lg overflow-hidden bg-gray-100 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-winter-accent focus:ring-offset-2"
     >
-      {isImage && isReady && thumbUrl ? (
+      {isImage && thumbUrl ? (
         <img
           src={thumbUrl}
           alt={item.caption || item.mediaId}
           className="w-full h-full object-cover"
         />
-      ) : isReady && item.type === 'video' ? (
+      ) : item.type === 'video' && thumbUrl ? (
+        <div className="relative w-full h-full">
+          <img
+            src={thumbUrl}
+            alt=""
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-4xl">▶️</span>
+          </div>
+        </div>
+      ) : item.type === 'video' ? (
         <div className="w-full h-full flex items-center justify-center bg-gray-200 text-4xl">
           ▶️
         </div>
       ) : (
         <div className="w-full h-full flex flex-col items-center justify-center text-winter-gray text-sm p-2">
-          <span>{item.status === 'pending' || item.status === 'processing' ? '⏳' : '❌'}</span>
-          <span className="capitalize">{item.status}</span>
+          <span>📷</span>
+          <span className="text-xs">No preview</span>
         </div>
       )}
     </button>
@@ -376,7 +386,6 @@ function Lightbox({
   };
 
   const isImage = item.type === 'image';
-  const isReady = item.status === 'ready';
   const displayUrl = item.displayUrl ?? item.originalUrl;
 
   return (
@@ -420,14 +429,14 @@ function Lightbox({
 
           {/* Content */}
           <div className="mx-2 sm:mx-4">
-            {isImage && isReady && displayUrl ? (
+            {isImage && displayUrl ? (
               <img
                 src={displayUrl}
                 alt={item.caption || item.mediaId}
                 className="max-w-full max-h-[85vh] object-contain rounded"
                 draggable={false}
               />
-            ) : item.type === 'video' && isReady && item.originalUrl ? (
+            ) : item.type === 'video' && item.originalUrl ? (
               <video
                 key={item.mediaId}
                 src={item.originalUrl}
@@ -438,7 +447,7 @@ function Lightbox({
               />
             ) : (
               <div className="text-white text-center py-8">
-                <p>Not ready yet ({item.status})</p>
+                <p>Not available</p>
                 <Button variant="secondary" className="mt-4" onClick={onClose}>
                   Close
                 </Button>

@@ -348,7 +348,6 @@ export class FamilyOlympicsStack extends cdk.Stack {
     olympicsTable.grantReadData(getMediaHandler);
     olympicsTable.grantReadData(deleteMediaHandler);
 
-    mediaTable.grantReadWriteData(requestUploadUrlHandler);
     mediaTable.grantReadData(listMediaHandler);
     mediaTable.grantReadData(getMediaHandler);
     mediaTable.grantReadWriteData(deleteMediaHandler);

@@ -408,13 +408,12 @@ class ApiClient {
 
   async listMedia(
     year: number,
-    params?: { eventId?: string; teamId?: string; person?: string; status?: string }
+    params?: { eventId?: string; teamId?: string; person?: string }
   ) {
     const searchParams = new URLSearchParams();
     if (params?.eventId) searchParams.append('eventId', params.eventId);
     if (params?.teamId) searchParams.append('teamId', params.teamId);
     if (params?.person) searchParams.append('person', params.person);
-    if (params?.status) searchParams.append('status', params.status);
     const qs = searchParams.toString();
     return this.request<{ media: MediaItem[] }>(
       `/olympics/${year}/media${qs ? `?${qs}` : ''}`,
@@ -441,7 +440,6 @@ export interface MediaItem {
   year: number;
   mediaId: string;
   type: 'image' | 'video';
-  status: 'pending' | 'processing' | 'ready' | 'failed';
   originalKey?: string;
   thumbnailKey?: string;
   displayKey?: string;

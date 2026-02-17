@@ -28,7 +28,6 @@ export const AdminMedia: React.FC = () => {
 
   const needsPassword = currentOlympics?.hasGalleryPassword === true && !isAuthenticated;
 
-  const [statusFilter, setStatusFilter] = useState<string>('');
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [mediaLoading, setMediaLoading] = useState(false);
   const [mediaError, setMediaError] = useState<string | null>(null);
@@ -38,8 +37,7 @@ export const AdminMedia: React.FC = () => {
     setMediaLoading(true);
     setMediaError(null);
     try {
-      const params = statusFilter ? { status: statusFilter } : undefined;
-      const res = await apiClient.listMedia(currentYear, params);
+      const res = await apiClient.listMedia(currentYear);
       if (res.success && res.data) {
         setMedia(res.data.media);
       } else {
@@ -50,7 +48,7 @@ export const AdminMedia: React.FC = () => {
     } finally {
       setMediaLoading(false);
     }
-  }, [currentYear, statusFilter]);
+  }, [currentYear]);
 
   // Fetch media when we have a year + are authenticated (or gallery is open)
   useEffect(() => {
@@ -122,19 +120,7 @@ export const AdminMedia: React.FC = () => {
 
       <Card>
         <CardBody>
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <label className="text-sm font-medium text-winter-dark">Filter by status:</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm"
-            >
-              <option value="">All</option>
-              <option value="pending">Pending</option>
-              <option value="processing">Processing</option>
-              <option value="ready">Ready</option>
-              <option value="failed">Failed</option>
-            </select>
+          <div className="mb-4">
             <span className="text-sm text-winter-gray">
               {media.length} item{media.length !== 1 ? 's' : ''}
             </span>
@@ -181,7 +167,6 @@ function AdminMediaCard({
   deleteLoading: boolean;
 }) {
   const [confirming, setConfirming] = useState(false);
-  const isReady = item.status === 'ready';
   const thumbUrl = item.thumbnailUrl ?? item.displayUrl;
 
   const handleDelete = async () => {
@@ -192,7 +177,7 @@ function AdminMediaCard({
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
       <div className="aspect-square bg-gray-100 relative">
-        {isReady && thumbUrl ? (
+        {thumbUrl ? (
           <div className="relative w-full h-full">
             <img
               src={thumbUrl}
@@ -209,23 +194,10 @@ function AdminMediaCard({
           </div>
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center text-winter-gray text-sm p-2">
-            <span className="text-2xl mb-1">
-              {item.status === 'pending' || item.status === 'processing' ? '⏳' : '❌'}
-            </span>
-            <span className="capitalize text-xs">{item.status}</span>
+            <span className="text-2xl mb-1">📷</span>
+            <span className="text-xs">No preview</span>
           </div>
         )}
-        <span
-          className={`absolute top-2 right-2 px-2 py-0.5 rounded text-xs font-medium ${
-            item.status === 'ready'
-              ? 'bg-green-100 text-green-800'
-              : item.status === 'failed'
-              ? 'bg-red-100 text-red-800'
-              : 'bg-gray-200 text-gray-700'
-          }`}
-        >
-          {item.status}
-        </span>
         {item.type === 'video' && (
           <span className="absolute top-2 left-2 px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
             Video

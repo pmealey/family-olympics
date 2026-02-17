@@ -36,7 +36,6 @@ describe('Media List Handler', () => {
         year: 2025,
         mediaId: 'media-1',
         type: 'image',
-        status: 'ready',
         originalKey: '2025/originals/media-1.jpg',
         thumbnailKey: '2025/thumbnails/media-1.webp',
         displayKey: '2025/display/media-1.webp',
