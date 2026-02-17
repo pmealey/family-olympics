@@ -3,7 +3,7 @@ import { APIGatewayProxyEvent } from 'aws-lambda';
 import { GetCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient, OLYMPICS_TABLE } from './db';
 
-const TOKEN_EXPIRY_SECONDS = 24 * 60 * 60; // 24 hours
+const TOKEN_EXPIRY_SECONDS = 7 * 24 * 60 * 60; // 7 days
 
 export interface OlympicsRecord {
   year: number;
