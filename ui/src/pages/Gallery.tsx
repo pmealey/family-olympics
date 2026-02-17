@@ -462,7 +462,7 @@ function Lightbox({
           )}
         </div>
 
-        {/* Caption + position */}
+        {/* Caption + position + download */}
         <div className="mt-2 w-full max-w-full shrink-0 flex flex-col items-center gap-1">
           {media.length > 1 && (
             <p className="text-white/80 text-sm">
@@ -474,6 +474,17 @@ function Lightbox({
               {item.caption && <p>{item.caption}</p>}
               {item.uploadedBy && <p className="text-winter-gray">— {item.uploadedBy}</p>}
             </div>
+          )}
+          {isReady && item.originalUrl && (
+            <a
+              href={item.originalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-white/90 hover:text-white underline mt-1"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {item.type === 'image' ? 'Download original image' : 'Download video'}
+            </a>
           )}
         </div>
       </div>
