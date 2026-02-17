@@ -4,4 +4,5 @@ export { AdminEvents } from './AdminEvents';
 export { AdminEventEdit } from './AdminEventEdit';
 export { AdminScores } from './AdminScores';
 export { AdminScoreEntry } from './AdminScoreEntry';
+export { AdminMedia } from './AdminMedia';
 

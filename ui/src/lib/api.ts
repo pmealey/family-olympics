@@ -346,6 +346,78 @@ class ApiClient {
       }
     );
   }
+
+  // Media endpoints
+  async requestMediaUploadUrl(
+    year: number,
+    data: {
+      fileName: string;
+      fileSize: number;
+      mimeType: string;
+      type: 'image' | 'video';
+      tags?: { eventId?: string; teamId?: string; persons?: string[] };
+      uploadedBy?: string;
+      caption?: string;
+    }
+  ) {
+    return this.request<{ uploadUrl: string; mediaId: string; expiresIn: number }>(
+      `/olympics/${year}/media/upload-url`,
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }
+    );
+  }
+
+  async listMedia(
+    year: number,
+    params?: { eventId?: string; teamId?: string; person?: string; status?: string }
+  ) {
+    const searchParams = new URLSearchParams();
+    if (params?.eventId) searchParams.append('eventId', params.eventId);
+    if (params?.teamId) searchParams.append('teamId', params.teamId);
+    if (params?.person) searchParams.append('person', params.person);
+    if (params?.status) searchParams.append('status', params.status);
+    const qs = searchParams.toString();
+    return this.request<{ media: MediaItem[] }>(
+      `/olympics/${year}/media${qs ? `?${qs}` : ''}`
+    );
+  }
+
+  async getMedia(year: number, mediaId: string) {
+    return this.request<MediaItem>(
+      `/olympics/${year}/media/${encodeURIComponent(mediaId)}`
+    );
+  }
+
+  async deleteMedia(year: number, mediaId: string) {
+    return this.request<{ deleted: boolean }>(
+      `/olympics/${year}/media/${encodeURIComponent(mediaId)}`,
+      { method: 'DELETE' }
+    );
+  }
+}
+
+export interface MediaItem {
+  year: number;
+  mediaId: string;
+  type: 'image' | 'video';
+  status: 'pending' | 'processing' | 'ready' | 'failed';
+  originalKey?: string;
+  thumbnailKey?: string;
+  displayKey?: string;
+  originalUrl?: string;
+  thumbnailUrl?: string;
+  displayUrl?: string;
+  mimeType?: string;
+  fileSize?: number;
+  tags?: { eventId?: string; teamId?: string; persons?: string[] };
+  uploadedBy?: string;
+  caption?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  eventId?: string;
+  teamId?: string;
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

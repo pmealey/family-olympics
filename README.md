@@ -11,6 +11,7 @@ Family Olympics is a serverless web application that helps families organize and
 - 📅 Schedule and manage events throughout the year
 - 🎯 Support for both placement-based and judge-scored events
 - 📊 Real-time leaderboards and scoring
+- 📷 **Media gallery** – upload photos and videos, filter by event/team, lightbox viewer
 - 👨‍⚖️ Judge interface for entering scores on mobile devices
 - 🎨 Modern, responsive UI built with React and Tailwind CSS
 - ☁️ Fully serverless architecture on AWS
@@ -86,21 +87,24 @@ family-olympics/
 ├── bin/                          # CDK app entry point
 ├── lib/                          # CDK infrastructure code
 │   ├── family-olympics-stack.ts  # Main CDK stack definition
+│   ├── lambda-layers/sharp/      # Sharp layer for image processing (see README there)
 │   └── lambda/                   # Lambda function handlers
 │       ├── olympics/             # Olympics configuration endpoints
 │       ├── teams/                # Team management endpoints
 │       ├── events/               # Event management endpoints
 │       ├── scores/               # Score tracking endpoints
+│       ├── media/                # Media upload, list, get, delete, process
 │       └── shared/               # Shared utilities (DB, responses)
 ├── test/                         # Backend unit tests
-│   └── lambda/                   # Lambda function tests
+│   └── lambda/                   # Lambda function tests (including media/)
 ├── ui/                           # React frontend application
 │   ├── src/
 │   │   ├── components/           # Reusable UI components
 │   │   ├── pages/                # Page components
-│   │   │   ├── admin/            # Admin pages (Olympics, Teams, Events, Scores)
+│   │   │   ├── admin/            # Admin pages (Olympics, Teams, Events, Scores, Media)
 │   │   │   ├── Home.tsx          # Public leaderboard
 │   │   │   ├── Schedule.tsx      # Event schedule
+│   │   │   ├── Gallery.tsx       # Media gallery (filter, lightbox, upload)
 │   │   │   ├── EventDetail.tsx   # Individual event details
 │   │   │   └── Judge*.tsx        # Judge scoring interface
 │   │   ├── contexts/             # React contexts (Judge state)
@@ -169,12 +173,13 @@ npx cdk deploy
 
 ## 📊 Database Schema
 
-The application uses four DynamoDB tables:
+The application uses five DynamoDB tables:
 
 - **Olympics** - Configuration for each year (placement points, active year)
 - **Teams** - Team information (name, color, members)
 - **Events** - Event details (name, date, scoring type)
 - **Scores** - Individual scores (placement or judge scores)
+- **Media** - Media metadata (year, mediaId, type, status, S3 keys, tags, optional eventId/teamId)
 
 See [agent/DATA_MODELS.md](./agent/DATA_MODELS.md) for detailed schema documentation.
 
@@ -186,6 +191,7 @@ The REST API provides endpoints for:
 - **Teams**: GET, POST, PUT, DELETE `/teams/*`
 - **Events**: GET, POST, PUT, DELETE `/events/*`
 - **Scores**: GET, POST, DELETE `/scores/*`
+- **Media**: POST `/olympics/{year}/media/upload-url`, GET/DELETE `/olympics/{year}/media/*` (presigned URLs for upload/view)
 
 See [agent/API_SPEC.md](./agent/API_SPEC.md) for complete API documentation.
 
@@ -194,7 +200,9 @@ See [agent/API_SPEC.md](./agent/API_SPEC.md) for complete API documentation.
 ### Public Pages
 - **Home** - Real-time leaderboard showing team standings
 - **Schedule** - Upcoming and past events
-- **Event Detail** - Detailed results for each event
+- **Gallery** - Photos and videos; filter by event/team/person; lightbox and video player; upload from event/team pages or gallery
+- **Event Detail** - Detailed results for each event; link to event gallery and upload
+- **Team Detail** - Team roster; link to team gallery and upload
 
 ### Judge Interface
 - **Judge Login** - Enter judge name
@@ -206,6 +214,7 @@ See [agent/API_SPEC.md](./agent/API_SPEC.md) for complete API documentation.
 - **Teams** - Manage teams, colors, and members
 - **Events** - Create and manage events
 - **Scores** - View and manage all scores
+- **Media** - View all media for the year, filter by status, delete items
 
 ## 🧹 Cleanup
 

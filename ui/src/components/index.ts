@@ -15,4 +15,6 @@ export { EmptyState } from './EmptyState';
 export { ErrorMessage } from './ErrorMessage';
 export { Toast, useToast } from './Toast';
 export type { ToastType } from './Toast';
+export { MediaUpload } from './MediaUpload';
+export type { MediaUploadProps } from './MediaUpload';
 

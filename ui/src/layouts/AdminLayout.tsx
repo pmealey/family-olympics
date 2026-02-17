@@ -6,7 +6,7 @@ interface AdminLayoutProps {
   children?: React.ReactNode;
 }
 
-export type AdminTab = 'olympics' | 'teams' | 'events' | 'scores';
+export type AdminTab = 'olympics' | 'teams' | 'events' | 'scores' | 'media';
 
 interface AdminLayoutContextType {
   activeTab: AdminTab;
@@ -33,7 +33,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     const path = location.pathname.split('/admin/')[1] || '';
     const tabFromUrl = path.split('/')[0] as AdminTab;
     
-    if (tabFromUrl && ['olympics', 'teams', 'events', 'scores'].includes(tabFromUrl)) {
+    if (tabFromUrl && ['olympics', 'teams', 'events', 'scores', 'media'].includes(tabFromUrl)) {
       setActiveTab(tabFromUrl);
     } else {
       // Default to olympics if no valid tab in URL
@@ -50,6 +50,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { id: 'teams', label: 'Teams' },
     { id: 'events', label: 'Events' },
     { id: 'scores', label: 'Scores' },
+    { id: 'media', label: 'Media' },
   ];
 
   const handleTabClick = (tab: AdminTab) => {

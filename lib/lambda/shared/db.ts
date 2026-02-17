@@ -10,4 +10,5 @@ export const OLYMPICS_TABLE = process.env.OLYMPICS_TABLE_NAME!;
 export const TEAMS_TABLE = process.env.TEAMS_TABLE_NAME!;
 export const EVENTS_TABLE = process.env.EVENTS_TABLE_NAME!;
 export const SCORES_TABLE = process.env.SCORES_TABLE_NAME!;
+export const MEDIA_TABLE = process.env.MEDIA_TABLE_NAME!;
 

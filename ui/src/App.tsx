@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { JudgeProvider } from './contexts';
 import { PublicLayout } from './layouts';
-import { Home, Schedule, TeamDetail, EventDetail, Judge, JudgeEvents, JudgeScoreEntry, Admin } from './pages';
+import { Home, Schedule, Gallery, TeamDetail, EventDetail, Judge, JudgeEvents, JudgeScoreEntry, Admin } from './pages';
 import { ErrorBoundary } from './components';
 
 function App() {
@@ -23,6 +23,14 @@ function App() {
             element={
               <PublicLayout>
                 <Schedule />
+              </PublicLayout>
+            }
+          />
+          <Route
+            path="/gallery"
+            element={
+              <PublicLayout>
+                <Gallery />
               </PublicLayout>
             }
           />

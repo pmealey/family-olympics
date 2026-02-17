@@ -79,13 +79,22 @@ export const Schedule: React.FC = () => {
     <PageTransition>
       <div className="space-y-6">
       <header className="space-y-1">
-        <Link
-          to="/"
-          className="inline-block text-sm text-winter-gray hover:text-winter-accent transition-colors rounded focus:outline-none focus:ring-2 focus:ring-winter-accent/50"
-          aria-label="Back to home"
-        >
-          ← Back to Home
-        </Link>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <Link
+            to="/"
+            className="inline-block text-sm text-winter-gray hover:text-winter-accent transition-colors rounded focus:outline-none focus:ring-2 focus:ring-winter-accent/50"
+            aria-label="Back to home"
+          >
+            ← Back to Home
+          </Link>
+          <Link
+            to="/gallery"
+            className="inline-block text-sm text-winter-gray hover:text-winter-accent transition-colors rounded focus:outline-none focus:ring-2 focus:ring-winter-accent/50"
+            aria-label="Gallery"
+          >
+            📷 Gallery
+          </Link>
+        </div>
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-xl sm:text-2xl font-display font-bold text-winter-dark m-0">Schedule</h1>
           <RefreshButton onRefresh={handleRefresh} />

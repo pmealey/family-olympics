@@ -111,6 +111,24 @@ export function useEventScores(year: number | null, eventId: string | null) {
   );
 }
 
+// Media hooks
+export function useListMedia(
+  year: number | null,
+  params?: { eventId?: string; teamId?: string; person?: string; status?: string }
+) {
+  return useAsync(
+    () => apiClient.listMedia(year!, params),
+    year !== null
+  );
+}
+
+export function useMedia(year: number | null, mediaId: string | null) {
+  return useAsync(
+    () => apiClient.getMedia(year!, mediaId!),
+    year !== null && mediaId !== null
+  );
+}
+
 // Mutation hook for POST/PUT/DELETE operations
 export function useMutation<TArgs extends any[], TResult>(
   mutationFn: (...args: TArgs) => Promise<ApiResponse<TResult>>

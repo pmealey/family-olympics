@@ -8,6 +8,7 @@ import { AdminEvents } from './admin/AdminEvents';
 import { AdminEventEdit } from './admin/AdminEventEdit';
 import { AdminScores } from './admin/AdminScores';
 import { AdminScoreEntry } from './admin/AdminScoreEntry';
+import { AdminMedia } from './admin/AdminMedia';
 
 export const Admin: React.FC = () => {
   return (
@@ -21,6 +22,7 @@ export const Admin: React.FC = () => {
           <Route path="/events/:eventId/edit" element={<AdminEventEdit />} />
           <Route path="/scores" element={<AdminScores />} />
           <Route path="/scores/:eventId" element={<AdminScoreEntry />} />
+          <Route path="/media" element={<AdminMedia />} />
         </Routes>
       </AdminLayout>
     </AdminProvider>

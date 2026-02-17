@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Button, Card, CardBody, StatusBadge, TeamColorIndicator, Loading } from '../components';
-import { useCurrentOlympics, useEvent, useEventScores, useTeams } from '../hooks/useApi';
+import { Button, Card, CardBody, StatusBadge, TeamColorIndicator, Loading, MediaUpload } from '../components';
+import { useCurrentOlympics, useEvent, useEventScores, useTeams, useEvents } from '../hooks/useApi';
 import type { PlacementScore, Team } from '../lib/api';
 import { formatPoints } from '../lib/standings';
 
@@ -17,9 +17,11 @@ export const EventDetail: React.FC = () => {
     eventId || null
   );
   const { data: teamsData, loading: teamsLoading } = useTeams(olympics?.year || null);
+  const { data: eventsData } = useEvents(olympics?.year || null);
 
   const scores = scoresData?.scores || [];
   const teams = teamsData?.teams || [];
+  const events = eventsData?.events || [];
 
   // Create a map of teamId to team for quick lookup
   const teamMap = useMemo(() => {
@@ -278,6 +280,34 @@ export const EventDetail: React.FC = () => {
               <p className="text-winter-gray">
                 Results will appear here once scoring is complete
               </p>
+            </div>
+          </CardBody>
+        </Card>
+      )}
+
+      {/* Gallery section */}
+      {olympics?.year && (
+        <Card>
+          <CardBody>
+            <h3 className="text-xl font-display font-bold mb-2">Photos &amp; videos</h3>
+            <p className="text-winter-gray text-sm mb-4">
+              View photos and videos from this event, or upload new ones.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link to={`/gallery?eventId=${encodeURIComponent(event.eventId)}`}>
+                <Button variant="secondary" size="sm">
+                  📷 View gallery
+                </Button>
+              </Link>
+            </div>
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <MediaUpload
+                year={olympics.year}
+                events={events}
+                teams={teams}
+                initialEventId={event.eventId}
+                onUploadComplete={() => {}}
+              />
             </div>
           </CardBody>
         </Card>

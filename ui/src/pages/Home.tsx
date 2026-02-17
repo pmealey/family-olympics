@@ -65,7 +65,14 @@ export const Home: React.FC = () => {
       {/* Schedule CTA */}
       <Link className="block" to="/schedule">
         <Button variant="primary" size="lg" fullWidth>
-          📅 View Schedule →
+          📅 Schedule
+        </Button>
+      </Link>
+
+      {/* Gallery CTA */}
+      <Link className="block" to="/gallery">
+        <Button variant="secondary" size="lg" fullWidth>
+          📷 Gallery
         </Button>
       </Link>
 

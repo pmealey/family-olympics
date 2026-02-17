@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Card, CardBody, Loading, PageTransition, TeamColorIndicator, ErrorMessage, RefreshButton } from '../components';
-import { useCurrentOlympics, useTeam } from '../hooks/useApi';
+import { Card, CardBody, Loading, PageTransition, TeamColorIndicator, ErrorMessage, RefreshButton, MediaUpload } from '../components';
+import { useCurrentOlympics, useTeam, useEvents, useTeams } from '../hooks/useApi';
 
 export const TeamDetail: React.FC = () => {
   const { teamId } = useParams<{ teamId: string }>();
@@ -10,7 +10,11 @@ export const TeamDetail: React.FC = () => {
     olympics?.year ?? null,
     teamId ?? null
   );
+  const { data: eventsData } = useEvents(olympics?.year ?? null);
+  const { data: teamsData } = useTeams(olympics?.year ?? null);
 
+  const events = eventsData?.events ?? [];
+  const teams = teamsData?.teams ?? [];
   const isLoading = olympicsLoading || teamLoading;
 
   const handleRefresh = async () => {
@@ -91,6 +95,33 @@ export const TeamDetail: React.FC = () => {
                   <p className="text-winter-gray text-sm">No members listed</p>
                 )}
               </div>
+
+              {/* Gallery section */}
+              {olympics?.year && teamId && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <h3 className="text-sm font-semibold text-winter-gray uppercase tracking-wide mb-2">
+                    Photos &amp; videos
+                  </h3>
+                  <p className="text-winter-gray text-sm mb-3">
+                    View or upload photos and videos for this team.
+                  </p>
+                  <Link
+                    to={`/gallery?teamId=${encodeURIComponent(teamId)}`}
+                    className="inline-block mb-4"
+                  >
+                    <span className="text-winter-accent hover:text-winter-accent-dark font-medium text-sm">
+                      📷 View gallery →
+                    </span>
+                  </Link>
+                  <MediaUpload
+                    year={olympics.year}
+                    events={events}
+                    teams={teams}
+                    initialTeamId={teamId}
+                    onUploadComplete={() => {}}
+                  />
+                </div>
+              )}
             </CardBody>
           </Card>
         ) : null}

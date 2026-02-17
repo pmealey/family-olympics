@@ -5,6 +5,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
@@ -60,6 +61,44 @@ export class FamilyOlympicsStack extends cdk.Stack {
       sortKey: { name: 'eventId', type: dynamodb.AttributeType.STRING },
     });
 
+    // Media Table (photos/videos with GSIs for event and team)
+    const mediaTable = new dynamodb.Table(this, 'MediaTable', {
+      tableName: 'FamilyOlympics-Media',
+      partitionKey: { name: 'year', type: dynamodb.AttributeType.NUMBER },
+      sortKey: { name: 'mediaId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    mediaTable.addGlobalSecondaryIndex({
+      indexName: 'EventIndex',
+      partitionKey: { name: 'eventId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'createdAt', type: dynamodb.AttributeType.STRING },
+    });
+
+    mediaTable.addGlobalSecondaryIndex({
+      indexName: 'TeamIndex',
+      partitionKey: { name: 'teamId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'createdAt', type: dynamodb.AttributeType.STRING },
+    });
+
+    // ============================================
+    // S3 Media Bucket (private, presigned URLs only)
+    // ============================================
+
+    const mediaBucket = new s3.Bucket(this, 'MediaBucket', {
+      bucketName: `family-olympics-media-${this.account}`,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      autoDeleteObjects: false,
+      lifecycleRules: [
+        {
+          id: 'AbortIncompleteMultipartUploads',
+          abortIncompleteMultipartUploadAfter: cdk.Duration.days(7),
+        },
+      ],
+    });
+
     // ============================================
     // Lambda Environment Variables
     // ============================================
@@ -69,6 +108,8 @@ export class FamilyOlympicsStack extends cdk.Stack {
       TEAMS_TABLE_NAME: teamsTable.tableName,
       EVENTS_TABLE_NAME: eventsTable.tableName,
       SCORES_TABLE_NAME: scoresTable.tableName,
+      MEDIA_TABLE_NAME: mediaTable.tableName,
+      MEDIA_BUCKET_NAME: mediaBucket.bucketName,
       CODE_VERSION: '1.0.3', // Force Lambda update
     };
 
@@ -207,6 +248,56 @@ export class FamilyOlympicsStack extends cdk.Stack {
       ...bundlingConfig,
     });
 
+    // Media handlers
+    const requestUploadUrlHandler = new nodejs.NodejsFunction(this, 'RequestUploadUrlHandler', {
+      entry: join(__dirname, 'lambda/media/requestUploadUrl.ts'),
+      environment: lambdaEnvironment,
+      ...bundlingConfig,
+    });
+
+    const listMediaHandler = new nodejs.NodejsFunction(this, 'ListMediaHandler', {
+      entry: join(__dirname, 'lambda/media/list.ts'),
+      environment: lambdaEnvironment,
+      ...bundlingConfig,
+    });
+
+    const getMediaHandler = new nodejs.NodejsFunction(this, 'GetMediaHandler', {
+      entry: join(__dirname, 'lambda/media/get.ts'),
+      environment: lambdaEnvironment,
+      ...bundlingConfig,
+    });
+
+    const deleteMediaHandler = new nodejs.NodejsFunction(this, 'DeleteMediaHandler', {
+      entry: join(__dirname, 'lambda/media/delete.ts'),
+      environment: lambdaEnvironment,
+      ...bundlingConfig,
+    });
+
+    // Sharp layer: run "npm run build:sharp-layer" once so lambda-layers/sharp/nodejs/node_modules/sharp exists.
+    // sharp has native bindings; the layer provides the Linux binary so we don't need Docker.
+    const sharpLayer = new lambda.LayerVersion(this, 'SharpLayer', {
+      code: lambda.Code.fromAsset(join(__dirname, 'lambda-layers/sharp')),
+      compatibleRuntimes: [lambda.Runtime.NODEJS_20_X],
+      description: 'sharp for image processing on Lambda (Linux x64)',
+    });
+
+    const processMediaHandler = new nodejs.NodejsFunction(this, 'ProcessMediaHandler', {
+      entry: join(__dirname, 'lambda/media/process.ts'),
+      environment: lambdaEnvironment,
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: 'index.handler',
+      timeout: cdk.Duration.minutes(1),
+      memorySize: 1024,
+      layers: [sharpLayer],
+      bundling: {
+        minify: false,
+        sourceMap: true,
+        externalModules: ['@aws-sdk', 'sharp'],
+        forceDockerBundling: false,
+        format: nodejs.OutputFormat.CJS,
+      },
+    });
+
     // ============================================
     // Grant DynamoDB Permissions
     // ============================================
@@ -240,6 +331,25 @@ export class FamilyOlympicsStack extends cdk.Stack {
 
     // Cross-table: SubmitJudgeScoreHandler reads Events to validate event exists and not completed
     eventsTable.grantReadData(submitJudgeScoreHandler);
+
+    // Media: DynamoDB and S3
+    mediaTable.grantReadWriteData(requestUploadUrlHandler);
+    mediaTable.grantReadData(listMediaHandler);
+    mediaTable.grantReadData(getMediaHandler);
+    mediaTable.grantReadWriteData(deleteMediaHandler);
+    mediaTable.grantReadWriteData(processMediaHandler);
+
+    mediaBucket.grantPut(requestUploadUrlHandler);
+    mediaBucket.grantRead(processMediaHandler);
+    mediaBucket.grantWrite(processMediaHandler);
+    mediaBucket.grantRead(listMediaHandler);
+    mediaBucket.grantRead(getMediaHandler);
+    mediaBucket.grantReadWrite(deleteMediaHandler);
+
+    mediaBucket.addEventNotification(
+      s3.EventType.OBJECT_CREATED,
+      new s3n.LambdaDestination(processMediaHandler)
+    );
 
     // ============================================
     // API Gateway
@@ -304,6 +414,16 @@ export class FamilyOlympicsStack extends cdk.Stack {
 
     const score = eventScores.addResource('{scoreId}');
     score.addMethod('DELETE', new apigateway.LambdaIntegration(deleteScoreHandler));
+
+    // Media routes
+    const olympicsYearMedia = olympicsYear.addResource('media');
+    const mediaUploadUrl = olympicsYearMedia.addResource('upload-url');
+    mediaUploadUrl.addMethod('POST', new apigateway.LambdaIntegration(requestUploadUrlHandler));
+    olympicsYearMedia.addMethod('GET', new apigateway.LambdaIntegration(listMediaHandler));
+
+    const mediaItem = olympicsYearMedia.addResource('{mediaId}');
+    mediaItem.addMethod('GET', new apigateway.LambdaIntegration(getMediaHandler));
+    mediaItem.addMethod('DELETE', new apigateway.LambdaIntegration(deleteMediaHandler));
 
     // ============================================
     // S3 Bucket for Frontend Hosting
