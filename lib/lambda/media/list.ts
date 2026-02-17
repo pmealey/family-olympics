@@ -9,6 +9,28 @@ import { verifyGalleryToken } from '../shared/galleryAuth';
 const MEDIA_BUCKET = process.env.MEDIA_BUCKET_NAME!;
 const s3 = new S3Client({});
 const PRESIGNED_GET_EXPIRY = 60 * 60; // 1 hour
+const DEFAULT_PAGE_SIZE = 48;
+const MAX_PAGE_SIZE = 100;
+
+function decodeNextToken(token: string | undefined): Record<string, unknown> | undefined {
+  if (!token?.trim()) return undefined;
+  try {
+    const json = Buffer.from(token.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8');
+    const key = JSON.parse(json) as Record<string, unknown>;
+    return key && typeof key === 'object' ? key : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function encodeNextToken(lastKey: Record<string, unknown> | undefined): string | undefined {
+  if (!lastKey || Object.keys(lastKey).length === 0) return undefined;
+  return Buffer.from(JSON.stringify(lastKey))
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
 
 async function addPresignedUrls(
   items: Record<string, unknown>[],
@@ -78,8 +100,14 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const eventId = q.eventId?.trim();
     const teamId = q.teamId?.trim();
     const person = q.person?.trim();
+    const limitRaw = q.limit != null ? parseInt(q.limit, 10) : DEFAULT_PAGE_SIZE;
+    const limit = Number.isNaN(limitRaw)
+      ? DEFAULT_PAGE_SIZE
+      : Math.min(MAX_PAGE_SIZE, Math.max(1, limitRaw));
+    const nextToken = decodeNextToken(q.nextToken);
 
     let items: Record<string, unknown>[];
+    let lastEvaluatedKey: Record<string, unknown> | undefined;
 
     if (eventId) {
       const result = await docClient.send(
@@ -88,9 +116,13 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
           IndexName: 'EventIndex',
           KeyConditionExpression: 'eventId = :eventId',
           ExpressionAttributeValues: { ':eventId': eventId },
+          Limit: limit,
+          ScanIndexForward: false,
+          ...(nextToken && { ExclusiveStartKey: nextToken }),
         })
       );
       items = (result.Items || []) as Record<string, unknown>[];
+      lastEvaluatedKey = result.LastEvaluatedKey as Record<string, unknown> | undefined;
     } else if (teamId) {
       const result = await docClient.send(
         new QueryCommand({
@@ -98,20 +130,31 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
           IndexName: 'TeamIndex',
           KeyConditionExpression: 'teamId = :teamId',
           ExpressionAttributeValues: { ':teamId': teamId },
+          Limit: limit,
+          ScanIndexForward: false,
+          ...(nextToken && { ExclusiveStartKey: nextToken }),
         })
       );
       items = (result.Items || []) as Record<string, unknown>[];
+      lastEvaluatedKey = result.LastEvaluatedKey as Record<string, unknown> | undefined;
     } else {
       const result = await docClient.send(
         new QueryCommand({
           TableName: MEDIA_TABLE,
+          IndexName: 'YearCreatedAtIndex',
           KeyConditionExpression: '#year = :year',
           ExpressionAttributeNames: { '#year': 'year' },
           ExpressionAttributeValues: { ':year': yearNum },
+          Limit: limit,
+          ScanIndexForward: false,
+          ...(nextToken && { ExclusiveStartKey: nextToken }),
         })
       );
       items = (result.Items || []) as Record<string, unknown>[];
+      lastEvaluatedKey = result.LastEvaluatedKey as Record<string, unknown> | undefined;
     }
+
+    items = items.filter((i) => i.thumbnailKey || i.displayKey);
 
     if (person) {
       items = items.filter((i) => {
@@ -121,11 +164,13 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       });
     }
 
-    items.sort((a, b) => (b.createdAt as string).localeCompare(a.createdAt as string));
-
     const withUrls = await addPresignedUrls(items, MEDIA_BUCKET);
+    const responseNextToken = encodeNextToken(lastEvaluatedKey);
 
-    return successResponse({ media: withUrls });
+    return successResponse({
+      media: withUrls,
+      ...(responseNextToken && { nextToken: responseNextToken }),
+    });
   } catch (error) {
     console.error('Error:', error);
     return errorResponse(

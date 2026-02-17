@@ -408,14 +408,16 @@ class ApiClient {
 
   async listMedia(
     year: number,
-    params?: { eventId?: string; teamId?: string; person?: string }
+    params?: { eventId?: string; teamId?: string; person?: string; limit?: number; nextToken?: string }
   ) {
     const searchParams = new URLSearchParams();
     if (params?.eventId) searchParams.append('eventId', params.eventId);
     if (params?.teamId) searchParams.append('teamId', params.teamId);
     if (params?.person) searchParams.append('person', params.person);
+    if (params?.limit != null) searchParams.append('limit', String(params.limit));
+    if (params?.nextToken) searchParams.append('nextToken', params.nextToken);
     const qs = searchParams.toString();
-    return this.request<{ media: MediaItem[] }>(
+    return this.request<{ media: MediaItem[]; nextToken?: string }>(
       `/olympics/${year}/media${qs ? `?${qs}` : ''}`,
       { headers: this.mediaHeaders() }
     );

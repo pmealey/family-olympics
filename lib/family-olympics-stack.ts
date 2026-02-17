@@ -82,6 +82,12 @@ export class FamilyOlympicsStack extends cdk.Stack {
       sortKey: { name: 'createdAt', type: dynamodb.AttributeType.STRING },
     });
 
+    mediaTable.addGlobalSecondaryIndex({
+      indexName: 'YearCreatedAtIndex',
+      partitionKey: { name: 'year', type: dynamodb.AttributeType.NUMBER },
+      sortKey: { name: 'createdAt', type: dynamodb.AttributeType.STRING },
+    });
+
     // ============================================
     // S3 Media Bucket (private, presigned URLs only)
     // ============================================
@@ -103,6 +109,7 @@ export class FamilyOlympicsStack extends cdk.Stack {
             'https://www.aureliansystems.io',
             'https://aureliansystems.io',
             'http://localhost:5173',
+            'http://127.0.0.1:5173',
           ],
           allowedHeaders: ['*'],
         },

@@ -99,13 +99,23 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     const s3 = new S3Client({});
 
-    // Generate presigned URL for original
+    // Metadata must be included in the signature or S3 returns 403 when the client sends x-amz-meta-* headers
+    const metadata: Record<string, string> = {};
+    if (caption?.trim()) metadata.caption = caption.trim();
+    if (uploadedBy?.trim()) metadata.uploadedby = uploadedBy.trim();
+    if (tags?.eventId) metadata.eventid = tags.eventId;
+    if (tags?.teamId) metadata.teamid = tags.teamId;
+    if (Array.isArray(tags?.persons) && tags.persons.length > 0) metadata.persons = JSON.stringify(tags.persons);
+    if (thumbnailExt) metadata.thumbnailext = thumbnailExt;
+    if (displayExt) metadata.displayext = displayExt;
+
     const originalUploadUrl = await getSignedUrl(
       s3,
       new PutObjectCommand({
         Bucket: MEDIA_BUCKET,
         Key: originalKey,
         ContentType: mimeType.trim(),
+        ...(Object.keys(metadata).length > 0 && { Metadata: metadata }),
       }),
       { expiresIn: PRESIGNED_URL_EXPIRY_SECONDS }
     );

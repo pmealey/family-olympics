@@ -1,7 +1,17 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
+import * as s3Module from '@aws-sdk/client-s3';
 import { handler } from '../../../lib/lambda/media/delete';
 import { docClient } from '../../../lib/lambda/shared/db';
 import { verifyGalleryToken } from '../../../lib/lambda/shared/galleryAuth';
+
+const originalEnv = process.env;
+beforeAll(() => {
+  process.env.MEDIA_BUCKET_NAME = 'test-media-bucket';
+});
+afterAll(() => {
+  process.env = originalEnv;
+});
+
 
 jest.mock('../../../lib/lambda/shared/db', () => ({
   docClient: {
@@ -16,11 +26,13 @@ jest.mock('../../../lib/lambda/shared/galleryAuth', () => ({
 
 jest.mock('@aws-sdk/client-s3', () => {
   const actual = jest.requireActual<typeof import('@aws-sdk/client-s3')>('@aws-sdk/client-s3');
+  const sendMock = jest.fn().mockResolvedValue({});
   return {
     ...actual,
     S3Client: jest.fn().mockImplementation(() => ({
-      send: jest.fn().mockResolvedValue({}),
+      send: sendMock,
     })),
+    __s3SendMock: sendMock,
   };
 });
 
@@ -52,6 +64,18 @@ describe('Media Delete Handler', () => {
     expect(body.success).toBe(true);
     expect(body.data.deleted).toBe(true);
     expect(docClient.send).toHaveBeenCalledTimes(2); // Get then Delete
+
+    const s3SendMock = (s3Module as unknown as { __s3SendMock: jest.Mock }).__s3SendMock;
+    expect(s3SendMock).toHaveBeenCalledTimes(1);
+    const deleteCmd = s3SendMock.mock.calls[0][0];
+    const input = deleteCmd.input ?? deleteCmd;
+    expect(input.Delete.Objects).toHaveLength(3);
+    const keys = input.Delete.Objects.map((o: { Key: string }) => o.Key).sort();
+    expect(keys).toEqual([
+      '2025/display/media-1.webp',
+      '2025/originals/media-1.jpg',
+      '2025/thumbnails/media-1.webp',
+    ]);
   });
 
   it('should return 404 if media not found', async () => {

@@ -14,7 +14,7 @@ import {
   MediaUpload,
   GalleryPasswordPrompt,
 } from '../components';
-import { useCurrentOlympics, useListMedia, useEvents, useTeams } from '../hooks/useApi';
+import { useCurrentOlympics, useListMediaPaginated, useEvents, useTeams } from '../hooks/useApi';
 import { useGalleryAuth } from '../hooks/useGalleryAuth';
 import { apiClient } from '../lib/api';
 import type { MediaItem } from '../lib/api';
@@ -47,20 +47,22 @@ export const Gallery: React.FC = () => {
   }, [searchParams]);
 
   const {
-    data: mediaData,
+    media,
+    nextToken,
     loading: mediaLoading,
+    loadingMore: mediaLoadingMore,
     error: mediaError,
-    execute: refetchMedia,
-  } = useListMedia(
+    refetch: refetchMedia,
+    loadMore,
+  } = useListMediaPaginated(
     year != null && isAuthenticated ? year : null,
     {
       ...(eventFilter && { eventId: eventFilter }),
       ...(teamFilter && { teamId: teamFilter }),
       ...(personFilter.trim() && { person: personFilter.trim() }),
-    }
+    },
+    isAuthenticated
   );
-
-  const media = mediaData?.media ?? [];
   const events = eventsData?.events ?? [];
   const teams = teamsData?.teams ?? [];
 
@@ -272,6 +274,17 @@ export const Gallery: React.FC = () => {
                 />
               ))}
             </div>
+            {nextToken && (
+              <div className="mt-6 flex justify-center">
+                <Button
+                  variant="secondary"
+                  onClick={loadMore}
+                  disabled={mediaLoadingMore}
+                >
+                  {mediaLoadingMore ? 'Loading…' : 'Load more'}
+                </Button>
+              </div>
+            )}
           </>
         )}
       </div>

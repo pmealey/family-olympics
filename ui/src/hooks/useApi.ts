@@ -112,6 +112,8 @@ export function useEventScores(year: number | null, eventId: string | null) {
 }
 
 // Media hooks
+const DEFAULT_MEDIA_PAGE_SIZE = 48;
+
 export function useListMedia(
   year: number | null,
   params?: { eventId?: string; teamId?: string; person?: string; status?: string }
@@ -120,6 +122,76 @@ export function useListMedia(
     () => apiClient.listMedia(year!, params),
     year !== null
   );
+}
+
+export function useListMediaPaginated(
+  year: number | null,
+  params: { eventId?: string; teamId?: string; person?: string } | undefined,
+  enabled: boolean
+) {
+  const [media, setMedia] = useState<import('../lib/api').MediaItem[]>([]);
+  const [nextToken, setNextToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const refetch = useCallback(async () => {
+    if (year == null) return;
+    setLoading(true);
+    setError(null);
+    setMedia([]);
+    setNextToken(null);
+    try {
+      const response = await apiClient.listMedia(year, {
+        ...params,
+        limit: DEFAULT_MEDIA_PAGE_SIZE,
+      });
+      if (response.success && response.data) {
+        setMedia(response.data.media);
+        setNextToken(response.data.nextToken ?? null);
+      } else if (response.error) {
+        setError(response.error.message);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  }, [year, params?.eventId, params?.teamId, params?.person]);
+
+  const loadMore = useCallback(async () => {
+    if (year == null || !nextToken) return;
+    setLoadingMore(true);
+    try {
+      const response = await apiClient.listMedia(year, {
+        ...params,
+        limit: DEFAULT_MEDIA_PAGE_SIZE,
+        nextToken,
+      });
+      if (response.success && response.data) {
+        setMedia((prev) => [...prev, ...response.data!.media]);
+        setNextToken(response.data!.nextToken ?? null);
+      } else if (response.error) {
+        setError(response.error.message);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [year, nextToken, params?.eventId, params?.teamId, params?.person]);
+
+  useEffect(() => {
+    if (year != null && enabled) {
+      refetch();
+    } else if (!enabled) {
+      setMedia([]);
+      setNextToken(null);
+      setError(null);
+    }
+  }, [year, enabled, refetch]);
+
+  return { media, nextToken, loading, loadingMore, error, refetch, loadMore };
 }
 
 export function useMedia(year: number | null, mediaId: string | null) {

@@ -37,7 +37,7 @@ export const AdminMedia: React.FC = () => {
     setMediaLoading(true);
     setMediaError(null);
     try {
-      const res = await apiClient.listMedia(currentYear);
+      const res = await apiClient.listMedia(currentYear, { limit: 500 });
       if (res.success && res.data) {
         setMedia(res.data.media);
       } else {

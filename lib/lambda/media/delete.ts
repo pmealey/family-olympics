@@ -54,6 +54,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     }
 
     const item = getResult.Item as Record<string, unknown>;
+    // Delete original, thumbnail, and display from S3 when present on the record
     const keys: string[] = [];
     if (item.originalKey) keys.push(item.originalKey as string);
     if (item.thumbnailKey) keys.push(item.thumbnailKey as string);
