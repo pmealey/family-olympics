@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Card, CardBody, Logo, TeamColorIndicator, Loading, PageTransition, RefreshButton } from '../components';
 import { useCurrentOlympics, useTeams, useScores, useEvents } from '../hooks/useApi';
-import { calculateStandings, getMedalEmoji, formatPoints, getCompletedEventsCount } from '../lib/standings';
+import { calculateStandings, getMedalEmoji, formatPoints } from '../lib/standings';
 
 export const Home: React.FC = () => {
   const { data: olympics, loading: olympicsLoading, error: olympicsError, execute: refetchOlympics } = useCurrentOlympics();
@@ -20,9 +20,12 @@ export const Home: React.FC = () => {
     return calculateStandings(olympics, teams, scores);
   }, [olympics, teams, scores]);
 
-  const completedEventsCount = useMemo(() => {
-    return getCompletedEventsCount(scores);
-  }, [scores]);
+  // Only count scoring events (placement or judged); ignore non-scoring events
+  const { completedEventsCount, scoringEventsTotal } = useMemo(() => {
+    const scoring = events.filter((e) => e.scoringType !== 'none');
+    const completed = scoring.filter((e) => e.completed).length;
+    return { completedEventsCount: completed, scoringEventsTotal: scoring.length };
+  }, [events]);
 
   const isLoading = olympicsLoading || teamsLoading || scoresLoading || eventsLoading;
 
@@ -120,7 +123,7 @@ export const Home: React.FC = () => {
               </div>
               
               <div className="text-center text-sm text-winter-gray mt-4">
-                Events completed: {completedEventsCount}/{events.length}
+                Events completed: {completedEventsCount}/{scoringEventsTotal}
               </div>
             </>
           )}
