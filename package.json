@@ -2,7 +2,7 @@
   "name": "family-olympics",
   "version": "0.1.0",
   "bin": {
-    "family-olympics": "bin/family-olympics.js"
+    "family-olympics": "dist/bin/family-olympics.js"
   },
   "scripts": {
     "build": "tsc",
