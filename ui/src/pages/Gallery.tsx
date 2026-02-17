@@ -387,6 +387,39 @@ function Lightbox({
 
   const isImage = item.type === 'image';
   const displayUrl = item.displayUrl ?? item.originalUrl;
+  const [downloading, setDownloading] = useState(false);
+
+  const getDownloadFilename = (): string => {
+    const ext = item.originalKey?.includes('.')
+      ? item.originalKey.slice(item.originalKey.lastIndexOf('.'))
+      : item.type === 'video'
+      ? '.mp4'
+      : '.jpg';
+    return `${item.mediaId}${ext}`;
+  };
+
+  const handleDownload = useCallback(async () => {
+    if (!item.originalUrl) return;
+    setDownloading(true);
+    try {
+      const res = await fetch(item.originalUrl);
+      if (!res.ok) throw new Error('Download failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = getDownloadFilename();
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download failed', err);
+    } finally {
+      setDownloading(false);
+    }
+  }, [item.originalUrl, item.mediaId, item.originalKey, item.type]);
 
   return (
     <div
@@ -484,16 +517,18 @@ function Lightbox({
               {item.uploadedBy && <p className="text-winter-gray">— {item.uploadedBy}</p>}
             </div>
           )}
-          {isReady && item.originalUrl && (
-            <a
-              href={item.originalUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-white/90 hover:text-white underline mt-1"
-              onClick={(e) => e.stopPropagation()}
+          {item.originalUrl && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDownload();
+              }}
+              disabled={downloading}
+              className="text-sm text-white/90 hover:text-white underline mt-1 bg-transparent border-none cursor-pointer disabled:opacity-60"
             >
-              {item.type === 'image' ? 'Download original image' : 'Download video'}
-            </a>
+              {downloading ? 'Downloading…' : item.type === 'image' ? 'Download original image' : 'Download video'}
+            </button>
           )}
         </div>
       </div>
