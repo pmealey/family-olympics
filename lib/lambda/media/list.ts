@@ -9,7 +9,7 @@ import { verifyGalleryToken } from '../shared/galleryAuth';
 const MEDIA_BUCKET = process.env.MEDIA_BUCKET_NAME!;
 const s3 = new S3Client({});
 const PRESIGNED_GET_EXPIRY = 60 * 60; // 1 hour
-const DEFAULT_PAGE_SIZE = 24;
+const DEFAULT_PAGE_SIZE = 12;
 const MAX_PAGE_SIZE = 100;
 
 function decodeNextToken(token: string | undefined): Record<string, unknown> | undefined {

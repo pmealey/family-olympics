@@ -102,9 +102,23 @@ export interface VideoThumbnail {
 }
 
 /**
+ * Wait for the next painted frame (for canvas to read video pixels on strict browsers e.g. Firefox mobile).
+ */
+function nextVideoFrame(video: HTMLVideoElement): Promise<void> {
+  if (typeof (video as any).requestVideoFrameCallback === 'function') {
+    return new Promise((resolve) => {
+      (video as any).requestVideoFrameCallback(() => resolve());
+    });
+  }
+  return new Promise<void>((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+  });
+}
+
+/**
  * Capture a thumbnail from a video file by seeking to 1 second (or 0 if short).
  * Uses a hidden <video> element + Canvas. Returns a JPEG/WebP blob.
- * Uses preload="auto" and optional play/pause so browsers decode a frame for seek.
+ * Plays briefly after seek so Firefox mobile (and similar) actually decode a frame for canvas.
  */
 export async function captureVideoThumbnail(file: File): Promise<VideoThumbnail> {
   const video = document.createElement('video');
@@ -117,7 +131,6 @@ export async function captureVideoThumbnail(file: File): Promise<VideoThumbnail>
   const url = URL.createObjectURL(file);
 
   try {
-    // Wait for metadata to load so we know the duration and dimensions
     await new Promise<void>((resolve, reject) => {
       video.onloadedmetadata = () => resolve();
       video.onerror = () => reject(new Error('Failed to load video'));
@@ -126,9 +139,6 @@ export async function captureVideoThumbnail(file: File): Promise<VideoThumbnail>
 
     const duration = Number(video.duration);
     const seekTime = Number.isFinite(duration) && duration > 0 ? Math.min(1, duration * 0.25) : 0;
-
-    // Some browsers only decode a frame after play(); do a brief play/pause then seek
-    await video.play().catch(() => {}).then(() => video.pause());
 
     video.currentTime = seekTime;
     await new Promise<void>((resolve, reject) => {
@@ -142,6 +152,16 @@ export async function captureVideoThumbnail(file: File): Promise<VideoThumbnail>
         reject(new Error('Failed to seek video'));
       };
     });
+
+    // Firefox mobile (and some others) only expose a frame to canvas after the video has played.
+    // Play briefly so a frame is decoded and painted, then capture.
+    await video.play().catch(() => {});
+    await new Promise<void>((resolve) => {
+      if (video.readyState >= 2) resolve();
+      else video.onplaying = () => resolve();
+    });
+    await nextVideoFrame(video);
+    video.pause();
 
     // Draw the frame to canvas and resize to thumbnail width
     let { videoWidth: width, videoHeight: height } = video;

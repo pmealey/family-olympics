@@ -6,7 +6,7 @@ interface GalleryPasswordPromptProps {
   error?: string | null;
 }
 
-function EyeIcon({ show }: { show: boolean }) {
+export function PasswordEyeIcon({ show }: { show: boolean }) {
   if (show) {
     return (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
@@ -75,7 +75,7 @@ export const GalleryPasswordPrompt: React.FC<GalleryPasswordPromptProps> = ({
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
                 tabIndex={-1}
               >
-                <EyeIcon show={!showPassword} />
+                <PasswordEyeIcon show={!showPassword} />
               </button>
             </div>
           </div>

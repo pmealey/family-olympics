@@ -350,6 +350,28 @@ export const Gallery: React.FC = () => {
                 }}
               />
             </div>
+            {(eventFilter || teamFilterIds.length > 0 || personFilter.trim()) && (
+              <div className="mt-4 pt-3 border-t border-gray-200">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    setEventFilter('');
+                    setTeamFilterIds([]);
+                    setPersonFilter('');
+                    setSearchParams((prev) => {
+                      const p = new URLSearchParams(prev);
+                      p.delete('eventId');
+                      p.delete('teamId');
+                      p.delete('person');
+                      return p;
+                    });
+                  }}
+                >
+                  Clear filters
+                </Button>
+              </div>
+            )}
           </CardBody>
         </Card>
 

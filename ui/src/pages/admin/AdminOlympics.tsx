@@ -3,7 +3,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardBody, Button, Input, Loading } from '../../components';
+import { Card, CardHeader, CardBody, Button, Input, Loading, PasswordEyeIcon } from '../../components';
 import { useAdmin } from '../../contexts/AdminContext';
 import { apiClient } from '../../lib/api';
 import { useMutation } from '../../hooks/useApi';
@@ -25,6 +25,7 @@ export const AdminOlympics: React.FC = () => {
 
   // Gallery password
   const [galleryPassword, setGalleryPassword] = useState('');
+  const [showGalleryPassword, setShowGalleryPassword] = useState(false);
   const [galleryPasswordLoading, setGalleryPasswordLoading] = useState(false);
   const [galleryPasswordError, setGalleryPasswordError] = useState<string | null>(null);
 
@@ -362,18 +363,32 @@ export const AdminOlympics: React.FC = () => {
             </p>
             <div className="flex flex-wrap gap-2 items-end">
               <div className="flex-1 min-w-[200px]">
-                <Input
-                  type="password"
-                  label="New password"
-                  placeholder={currentOlympics.hasGalleryPassword ? 'Leave blank to keep current' : 'Set a password'}
-                  value={galleryPassword}
-                  onChange={(e) => {
-                    setGalleryPassword(e.target.value);
-                    setGalleryPasswordError(null);
-                  }}
-                  disabled={galleryPasswordLoading}
-                  autoComplete="new-password"
-                />
+                <label className="block text-sm font-medium text-winter-dark mb-1">
+                  New password
+                </label>
+                <div className="relative w-full">
+                  <Input
+                    type={showGalleryPassword ? 'text' : 'password'}
+                    placeholder={currentOlympics.hasGalleryPassword ? 'Leave blank to keep current' : 'Set a password'}
+                    value={galleryPassword}
+                    onChange={(e) => {
+                      setGalleryPassword(e.target.value);
+                      setGalleryPasswordError(null);
+                    }}
+                    disabled={galleryPasswordLoading}
+                    autoComplete="new-password"
+                    className="pr-11"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowGalleryPassword((v) => !v)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded text-winter-gray hover:text-winter-dark hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-winter-accent/50"
+                    aria-label={showGalleryPassword ? 'Hide password' : 'Show password'}
+                    tabIndex={-1}
+                  >
+                    <PasswordEyeIcon show={!showGalleryPassword} />
+                  </button>
+                </div>
               </div>
               <Button
                 onClick={async () => {

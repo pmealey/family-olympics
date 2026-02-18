@@ -112,7 +112,7 @@ export function useEventScores(year: number | null, eventId: string | null) {
 }
 
 // Media hooks
-const DEFAULT_MEDIA_PAGE_SIZE = 24;
+const DEFAULT_MEDIA_PAGE_SIZE = 12;
 
 export function useListMedia(
   year: number | null,
