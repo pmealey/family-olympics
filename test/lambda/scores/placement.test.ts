@@ -63,14 +63,14 @@ describe('Scores Placement Handler', () => {
     expect(body.error.code).toBe('VALIDATION_ERROR');
   });
 
-  it('should return 400 if placement is missing required fields', async () => {
+  it('should return 400 if placement is missing required fields (teamId or place)', async () => {
     const event = {
       pathParameters: { year: '2025', eventId: 'event-1' },
       body: JSON.stringify({
         placements: [
           {
             teamId: 'team-1',
-            // Missing place, rawScore
+            // Missing place
           },
         ],
       }),
@@ -82,6 +82,31 @@ describe('Scores Placement Handler', () => {
     const body = JSON.parse(result.body);
     expect(body.success).toBe(false);
     expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('should accept placements without rawScore (place-only events)', async () => {
+    (docClient.send as jest.Mock).mockResolvedValue({});
+
+    const event = {
+      pathParameters: { year: '2025', eventId: 'event-1' },
+      body: JSON.stringify({
+        placements: [
+          { teamId: 'team-1', place: 1 },
+          { teamId: 'team-2', place: 2 },
+          { teamId: 'team-3', place: 3 },
+          { teamId: 'team-4', place: 4 },
+        ],
+      }),
+    } as Partial<APIGatewayProxyEvent> as APIGatewayProxyEvent;
+
+    const result = await handler(event);
+
+    expect(result.statusCode).toBe(201);
+    const body = JSON.parse(result.body);
+    expect(body.success).toBe(true);
+    expect(body.data.scores).toHaveLength(4);
+    expect(body.data.scores[0].rawScore).toBe('');
+    expect(docClient.send).toHaveBeenCalledTimes(4);
   });
 
   it('should handle DynamoDB errors gracefully', async () => {

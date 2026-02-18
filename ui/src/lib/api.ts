@@ -311,7 +311,7 @@ class ApiClient {
     placements: {
       teamId: string;
       place: number;
-      rawScore: string;
+      rawScore?: string;
     }[]
   ) {
     return this.request<{ scores: PlacementScore[] }>(

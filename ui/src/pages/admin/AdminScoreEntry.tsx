@@ -316,7 +316,7 @@ export const AdminScoreEntry: React.FC = () => {
                             {team && <TeamColorIndicator color={team.color} />}
                             <span className="font-medium truncate">{team?.name}</span>
                           </div>
-                          <span className="font-mono text-sm shrink-0">{score.rawScore}</span>
+                          <span className="font-mono text-sm shrink-0">{score.rawScore || '—'}</span>
                         </div>
                       );
                     })}
@@ -335,7 +335,7 @@ export const AdminScoreEntry: React.FC = () => {
             ) : (
               <div className="space-y-4">
                 <p className="text-winter-gray mb-4">
-                  Enter placement and scores for each team:
+                  Enter place (1st, 2nd, 3rd, 4th) for each team. Score is optional.
                 </p>
 
                 {teams.map((team) => (
@@ -360,10 +360,10 @@ export const AdminScoreEntry: React.FC = () => {
                       />
 
                       <Input
-                        label="Score"
+                        label="Score (optional)"
                         value={placementData[team.teamId]?.rawScore || ''}
                         onChange={(e) => updatePlacement(team.teamId, 'rawScore', e.target.value)}
-                        placeholder="2:34 or 15"
+                        placeholder="e.g. 2:34 or 15"
                         autoCapitalize="none"
                       />
                     </div>

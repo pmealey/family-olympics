@@ -6,7 +6,7 @@ import { successResponse, errorResponse, ErrorCodes } from '../shared/response';
 interface PlacementScore {
   teamId: string;
   place: number;
-  rawScore: string;
+  rawScore?: string;
 }
 
 interface SubmitPlacementRequest {
@@ -51,10 +51,10 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     for (const placement of placements) {
       const { teamId, place, rawScore } = placement;
 
-      if (!teamId || !place || !rawScore) {
+      if (!teamId || place == null || place < 1) {
         return errorResponse(
           ErrorCodes.VALIDATION_ERROR.code,
-          'Each placement must have teamId, place, and rawScore',
+          'Each placement must have teamId and place (1st, 2nd, 3rd, etc.)',
           ErrorCodes.VALIDATION_ERROR.status
         );
       }
@@ -65,7 +65,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
         year: parseInt(year),
         teamId,
         place,
-        rawScore,
+        rawScore: rawScore ?? '',
         createdAt: now,
         updatedAt: now,
       };

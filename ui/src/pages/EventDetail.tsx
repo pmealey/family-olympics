@@ -250,9 +250,9 @@ export const EventDetail: React.FC = () => {
                       <TeamColorIndicator color={team.color} size="sm" />
                       <div className="flex-1">
                         <div className="font-semibold">{team.name}</div>
-                        <div className="text-sm text-winter-gray">
-                          {score.rawScore}
-                        </div>
+                        {score.rawScore ? (
+                          <div className="text-sm text-winter-gray">{score.rawScore}</div>
+                        ) : null}
                       </div>
                     </div>
                     <div className="text-right">
