@@ -104,12 +104,15 @@ export interface VideoThumbnail {
 /**
  * Capture a thumbnail from a video file by seeking to 1 second (or 0 if short).
  * Uses a hidden <video> element + Canvas. Returns a JPEG/WebP blob.
+ * Uses preload="auto" and optional play/pause so browsers decode a frame for seek.
  */
 export async function captureVideoThumbnail(file: File): Promise<VideoThumbnail> {
   const video = document.createElement('video');
-  video.preload = 'metadata';
+  video.preload = 'auto';
   video.muted = true;
   video.playsInline = true;
+  video.setAttribute('playsinline', '');
+  video.setAttribute('webkit-playsinline', '');
 
   const url = URL.createObjectURL(file);
 
@@ -121,14 +124,23 @@ export async function captureVideoThumbnail(file: File): Promise<VideoThumbnail>
       video.src = url;
     });
 
-    // Seek to 1s or 25% of duration, whichever is smaller
-    const seekTime = Math.min(1, video.duration * 0.25);
-    video.currentTime = seekTime;
+    const duration = Number(video.duration);
+    const seekTime = Number.isFinite(duration) && duration > 0 ? Math.min(1, duration * 0.25) : 0;
 
-    // Wait for the frame to be available
+    // Some browsers only decode a frame after play(); do a brief play/pause then seek
+    await video.play().catch(() => {}).then(() => video.pause());
+
+    video.currentTime = seekTime;
     await new Promise<void>((resolve, reject) => {
-      video.onseeked = () => resolve();
-      video.onerror = () => reject(new Error('Failed to seek video'));
+      const timeout = setTimeout(() => reject(new Error('Video seek timeout')), 10000);
+      video.onseeked = () => {
+        clearTimeout(timeout);
+        resolve();
+      };
+      video.onerror = () => {
+        clearTimeout(timeout);
+        reject(new Error('Failed to seek video'));
+      };
     });
 
     // Draw the frame to canvas and resize to thumbnail width

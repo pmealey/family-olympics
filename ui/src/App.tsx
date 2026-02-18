@@ -35,6 +35,22 @@ function App() {
             }
           />
           <Route
+            path="/gallery/:year"
+            element={
+              <PublicLayout>
+                <Gallery />
+              </PublicLayout>
+            }
+          />
+          <Route
+            path="/gallery/:year/media/:mediaId"
+            element={
+              <PublicLayout>
+                <Gallery />
+              </PublicLayout>
+            }
+          />
+          <Route
             path="/teams/:teamId"
             element={
               <PublicLayout>

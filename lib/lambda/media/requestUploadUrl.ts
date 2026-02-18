@@ -50,7 +50,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       fileSize?: number;
       mimeType?: string;
       type?: 'image' | 'video';
-      tags?: { eventId?: string; teamId?: string; persons?: string[] };
+      tags?: { eventId?: string; teamId?: string; teamIds?: string[]; persons?: string[] };
       uploadedBy?: string;
       caption?: string;
       thumbnailExt?: string;
@@ -104,20 +104,33 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     if (caption?.trim()) metadata.caption = caption.trim();
     if (uploadedBy?.trim()) metadata.uploadedby = uploadedBy.trim();
     if (tags?.eventId) metadata.eventid = tags.eventId;
-    if (tags?.teamId) metadata.teamid = tags.teamId;
+    if (Array.isArray(tags?.teamIds) && tags.teamIds.length > 0) {
+      metadata.teamids = JSON.stringify(tags.teamIds.filter((id) => id && String(id).trim()));
+    } else if (tags?.teamId) {
+      metadata.teamid = tags.teamId;
+    }
     if (Array.isArray(tags?.persons) && tags.persons.length > 0) metadata.persons = JSON.stringify(tags.persons);
     if (thumbnailExt) metadata.thumbnailext = thumbnailExt;
     if (displayExt) metadata.displayext = displayExt;
+    if (fileName?.trim()) metadata.originalfilename = fileName.trim();
 
+    const metaKeys = Object.keys(metadata);
     const originalUploadUrl = await getSignedUrl(
       s3,
       new PutObjectCommand({
         Bucket: MEDIA_BUCKET,
         Key: originalKey,
         ContentType: mimeType.trim(),
-        ...(Object.keys(metadata).length > 0 && { Metadata: metadata }),
+        ...(metaKeys.length > 0 && { Metadata: metadata }),
       }),
-      { expiresIn: PRESIGNED_URL_EXPIRY_SECONDS }
+      {
+        expiresIn: PRESIGNED_URL_EXPIRY_SECONDS,
+        signableHeaders: new Set(['content-type']),
+        unhoistableHeaders:
+          metaKeys.length > 0
+            ? new Set(metaKeys.map((k) => `x-amz-meta-${k.toLowerCase()}`))
+            : undefined,
+      }
     );
 
     // Generate presigned URLs for thumbnail (images + videos) and display (images only)
@@ -161,6 +174,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     return successResponse(
       {
         uploadUrl: originalUploadUrl,
+        contentType: mimeType.trim(),
         ...(thumbnailUploadUrl && { thumbnailUploadUrl }),
         ...(displayUploadUrl && { displayUploadUrl }),
         mediaId,

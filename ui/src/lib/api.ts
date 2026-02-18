@@ -383,7 +383,7 @@ class ApiClient {
       fileSize: number;
       mimeType: string;
       type: 'image' | 'video';
-      tags?: { eventId?: string; teamId?: string; persons?: string[] };
+      tags?: { eventId?: string; teamId?: string; teamIds?: string[]; persons?: string[] };
       uploadedBy?: string;
       caption?: string;
       thumbnailExt?: string;
@@ -392,6 +392,7 @@ class ApiClient {
   ) {
     return this.request<{
       uploadUrl: string;
+      contentType: string;
       thumbnailUploadUrl?: string;
       displayUploadUrl?: string;
       mediaId: string;
@@ -408,11 +409,14 @@ class ApiClient {
 
   async listMedia(
     year: number,
-    params?: { eventId?: string; teamId?: string; person?: string; limit?: number; nextToken?: string }
+    params?: { eventId?: string; teamId?: string | string[]; person?: string; limit?: number; nextToken?: string }
   ) {
     const searchParams = new URLSearchParams();
     if (params?.eventId) searchParams.append('eventId', params.eventId);
-    if (params?.teamId) searchParams.append('teamId', params.teamId);
+    const teamIdParam = Array.isArray(params?.teamId)
+      ? params.teamId.filter(Boolean).join(',')
+      : params?.teamId;
+    if (teamIdParam) searchParams.append('teamId', teamIdParam);
     if (params?.person) searchParams.append('person', params.person);
     if (params?.limit != null) searchParams.append('limit', String(params.limit));
     if (params?.nextToken) searchParams.append('nextToken', params.nextToken);
@@ -427,6 +431,21 @@ class ApiClient {
     return this.request<MediaItem>(
       `/olympics/${year}/media/${encodeURIComponent(mediaId)}`,
       { headers: this.mediaHeaders() }
+    );
+  }
+
+  async updateMedia(
+    year: number,
+    mediaId: string,
+    payload: { caption?: string; uploadedBy?: string; eventId?: string; teamId?: string; teamIds?: string[]; persons?: string[] }
+  ) {
+    return this.request<MediaItem>(
+      `/olympics/${year}/media/${encodeURIComponent(mediaId)}`,
+      {
+        method: 'PATCH',
+        headers: this.mediaHeaders(),
+        body: JSON.stringify(payload),
+      }
     );
   }
 
@@ -450,13 +469,15 @@ export interface MediaItem {
   displayUrl?: string;
   mimeType?: string;
   fileSize?: number;
-  tags?: { eventId?: string; teamId?: string; persons?: string[] };
+  tags?: { eventId?: string; teamId?: string; teamIds?: string[]; persons?: string[] };
   uploadedBy?: string;
   caption?: string;
+  originalFileName?: string;
   createdAt?: string;
   updatedAt?: string;
   eventId?: string;
   teamId?: string;
+  teamIds?: string[];
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

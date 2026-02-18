@@ -66,7 +66,20 @@ export const handler: S3Handler = async (event: S3Event) => {
       }
 
       const eventId = meta.eventid?.trim() || undefined;
-      const teamId = meta.teamid?.trim() || undefined;
+      let teamIds: string[] | undefined;
+      if (meta.teamids) {
+        try {
+          const parsed = JSON.parse(meta.teamids) as unknown;
+          teamIds = Array.isArray(parsed) ? parsed.map(String).filter(Boolean) : undefined;
+        } catch {
+          // ignore
+        }
+      }
+      if (!teamIds?.length && meta.teamid?.trim()) {
+        teamIds = [meta.teamid.trim()];
+      }
+      const teamId = teamIds?.length ? teamIds[0] : undefined; // primary for TeamIndex GSI
+      const originalFileName = meta.originalfilename?.trim() || undefined;
       const now = new Date().toISOString();
 
       const item: Record<string, unknown> = {
@@ -83,10 +96,19 @@ export const handler: S3Handler = async (event: S3Event) => {
         createdAt: now,
         updatedAt: now,
       };
+      if (originalFileName) item.originalFileName = originalFileName;
 
       if (eventId) item.eventId = eventId;
       if (teamId) item.teamId = teamId;
-      if (persons?.length) item.tags = { ...(eventId && { eventId }), ...(teamId && { teamId }), persons };
+      if (teamIds?.length) item.teamIds = teamIds;
+      if (persons?.length || eventId || teamId || teamIds?.length) {
+        item.tags = {
+          ...(eventId && { eventId }),
+          ...(teamId && { teamId }),
+          ...(teamIds?.length && { teamIds }),
+          ...(persons?.length && { persons }),
+        };
+      }
 
       await docClient.send(
         new PutCommand({

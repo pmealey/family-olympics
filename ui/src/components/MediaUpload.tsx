@@ -4,6 +4,16 @@ import { apiClient } from '../lib/api';
 import { resizeImage, captureVideoThumbnail, extForType } from '../lib/imageResize';
 import type { Event, Team } from '../lib/api';
 
+function eventsByTimeOrder(a: Event, b: Event): number {
+  const dayA = a.scheduledDay === 1 || a.scheduledDay === 2 ? a.scheduledDay : 999;
+  const dayB = b.scheduledDay === 1 || b.scheduledDay === 2 ? b.scheduledDay : 999;
+  if (dayA !== dayB) return dayA - dayB;
+  if (!a.scheduledTime && !b.scheduledTime) return 0;
+  if (!a.scheduledTime) return 1;
+  if (!b.scheduledTime) return -1;
+  return a.scheduledTime.localeCompare(b.scheduledTime);
+}
+
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024; // 20MB
 const MAX_VIDEO_BYTES = 100 * 1024 * 1024; // 100MB
 
@@ -27,6 +37,7 @@ export interface MediaUploadProps {
   teams: Team[];
   initialEventId?: string;
   initialTeamId?: string;
+  initialTeamIds?: string[];
   onUploadComplete?: () => void;
   className?: string;
 }
@@ -59,11 +70,14 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
   teams,
   initialEventId = '',
   initialTeamId = '',
+  initialTeamIds,
   onUploadComplete,
   className = '',
 }) => {
   const [eventId, setEventId] = useState(initialEventId);
-  const [teamId, setTeamId] = useState(initialTeamId);
+  const [teamIds, setTeamIds] = useState<string[]>(() =>
+    initialTeamIds?.length ? initialTeamIds : initialTeamId ? [initialTeamId] : []
+  );
   const [persons, setPersons] = useState<string[]>([]);
   const [uploadedBy, setUploadedBy] = useState('');
   const [caption, setCaption] = useState('');
@@ -72,8 +86,10 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
   const [tagError, setTagError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const selectedTeam = teams.find((t) => t.teamId === teamId);
-  const memberOptions = selectedTeam?.members ?? [];
+  const selectedTeams = teams.filter((t) => teamIds.includes(t.teamId));
+  const memberOptions = Array.from(
+    new Set(selectedTeams.flatMap((t) => t.members ?? []))
+  );
 
   const addFiles = useCallback((newFiles: FileList | null) => {
     if (!newFiles?.length) return;
@@ -147,7 +163,7 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
           type,
           tags: {
             ...(eventId && { eventId }),
-            ...(teamId && { teamId }),
+            ...(teamIds.length > 0 && { teamIds }),
             ...(persons.length > 0 && { persons }),
           },
           ...(uploadedBy.trim() && { uploadedBy: uploadedBy.trim() }),
@@ -164,7 +180,7 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
           return;
         }
 
-        const { uploadUrl, thumbnailUploadUrl, displayUploadUrl, mediaId } = res.data;
+        const { uploadUrl, contentType, thumbnailUploadUrl, displayUploadUrl, mediaId } = res.data;
 
         // Step 3: upload thumbnail and display first so they exist when the process Lambda runs (on original)
         if (thumbnailBlob && thumbnailUploadUrl) {
@@ -191,15 +207,16 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
           });
           xhr.addEventListener('error', () => reject(new Error('Network error')));
           xhr.open('PUT', uploadUrl);
-          xhr.setRequestHeader('Content-Type', fp.file.type);
+          xhr.setRequestHeader('Content-Type', contentType);
           // Metadata for process Lambda (S3 stores as x-amz-meta-*, returned lowercase)
           if (caption.trim()) xhr.setRequestHeader('x-amz-meta-caption', caption.trim());
           if (uploadedBy.trim()) xhr.setRequestHeader('x-amz-meta-uploadedby', uploadedBy.trim());
           if (eventId) xhr.setRequestHeader('x-amz-meta-eventid', eventId);
-          if (teamId) xhr.setRequestHeader('x-amz-meta-teamid', teamId);
+          if (teamIds.length > 0) xhr.setRequestHeader('x-amz-meta-teamids', JSON.stringify(teamIds));
           if (persons.length > 0) xhr.setRequestHeader('x-amz-meta-persons', JSON.stringify(persons));
           if (thumbnailExt) xhr.setRequestHeader('x-amz-meta-thumbnailext', thumbnailExt);
           if (displayExt) xhr.setRequestHeader('x-amz-meta-displayext', displayExt);
+          xhr.setRequestHeader('x-amz-meta-originalfilename', fp.file.name);
           xhr.send(fp.file);
         });
 
@@ -211,7 +228,7 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
         });
       }
     },
-    [year, eventId, teamId, persons, uploadedBy, caption]
+    [year, eventId, teamIds, persons, uploadedBy, caption]
   );
 
   const startUploads = useCallback(async () => {
@@ -261,23 +278,37 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
             label="Event (optional)"
             options={[
               { value: '', label: '— None —' },
-              ...events.map((e) => ({ value: e.eventId, label: e.name || e.eventId })),
+              ...[...events].sort(eventsByTimeOrder).map((e) => ({ value: e.eventId, label: e.name || e.eventId })),
             ]}
             value={eventId}
             onChange={(e) => setEventId(e.target.value)}
           />
-          <Select
-            label="Team (optional)"
-            options={[
-              { value: '', label: '— None —' },
-              ...teams.map((t) => ({ value: t.teamId, label: t.name })),
-            ]}
-            value={teamId}
-            onChange={(e) => {
-              setTeamId(e.target.value);
-              setPersons([]);
-            }}
-          />
+          <div>
+            <span className="block text-sm font-medium text-winter-dark mb-2">Teams (optional)</span>
+            <p className="text-xs text-winter-gray mb-2">Multiple teams can be in one photo</p>
+            <div className="flex flex-wrap gap-3">
+              {teams.map((t) => (
+                <label
+                  key={t.teamId}
+                  className="inline-flex items-center gap-2 cursor-pointer text-sm text-winter-dark"
+                >
+                  <input
+                    type="checkbox"
+                    checked={teamIds.includes(t.teamId)}
+                    onChange={() => {
+                      setTeamIds((prev) =>
+                        prev.includes(t.teamId)
+                          ? prev.filter((id) => id !== t.teamId)
+                          : [...prev, t.teamId]
+                      );
+                    }}
+                    className="rounded border-gray-300 text-winter-accent focus:ring-winter-accent"
+                  />
+                  <span>{t.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
         </div>
 
         {memberOptions.length > 0 && (

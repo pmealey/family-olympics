@@ -9,7 +9,7 @@ import { verifyGalleryToken } from '../shared/galleryAuth';
 const MEDIA_BUCKET = process.env.MEDIA_BUCKET_NAME!;
 const s3 = new S3Client({});
 const PRESIGNED_GET_EXPIRY = 60 * 60; // 1 hour
-const DEFAULT_PAGE_SIZE = 48;
+const DEFAULT_PAGE_SIZE = 24;
 const MAX_PAGE_SIZE = 100;
 
 function decodeNextToken(token: string | undefined): Record<string, unknown> | undefined {
@@ -98,7 +98,10 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     }
 
     const eventId = q.eventId?.trim();
-    const teamId = q.teamId?.trim();
+    const teamIdRaw = q.teamId?.trim();
+    const teamIds = teamIdRaw
+      ? teamIdRaw.split(',').map((id) => id.trim()).filter(Boolean)
+      : [];
     const person = q.person?.trim();
     const limitRaw = q.limit != null ? parseInt(q.limit, 10) : DEFAULT_PAGE_SIZE;
     const limit = Number.isNaN(limitRaw)
@@ -123,20 +126,36 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       );
       items = (result.Items || []) as Record<string, unknown>[];
       lastEvaluatedKey = result.LastEvaluatedKey as Record<string, unknown> | undefined;
-    } else if (teamId) {
+    } else if (teamIds.length > 0) {
+      // Support items with teamIds[] (multiple teams per photo) or legacy teamId
+      const overFetch = limit * 10;
+      const filterParts = teamIds.map((_, i) => `(contains(#teamIds, :t${i}) OR #teamId = :t${i})`);
+      const filterExpr = filterParts.join(' OR ');
+      const exprNames: Record<string, string> = { '#year': 'year', '#teamIds': 'teamIds', '#teamId': 'teamId' };
+      const exprValues: Record<string, unknown> = { ':year': yearNum };
+      teamIds.forEach((tid, i) => {
+        exprValues[`:t${i}`] = tid;
+      });
       const result = await docClient.send(
         new QueryCommand({
           TableName: MEDIA_TABLE,
-          IndexName: 'TeamIndex',
-          KeyConditionExpression: 'teamId = :teamId',
-          ExpressionAttributeValues: { ':teamId': teamId },
-          Limit: limit,
+          IndexName: 'YearCreatedAtIndex',
+          KeyConditionExpression: '#year = :year',
+          FilterExpression: filterExpr,
+          ExpressionAttributeNames: exprNames,
+          ExpressionAttributeValues: exprValues,
+          Limit: overFetch,
           ScanIndexForward: false,
           ...(nextToken && { ExclusiveStartKey: nextToken }),
         })
       );
-      items = (result.Items || []) as Record<string, unknown>[];
-      lastEvaluatedKey = result.LastEvaluatedKey as Record<string, unknown> | undefined;
+      const raw = (result.Items || []) as Record<string, unknown>[];
+      items = raw.slice(0, limit);
+      const lastItem = items[items.length - 1];
+      lastEvaluatedKey =
+        lastItem && raw.length > limit
+          ? { year: yearNum, createdAt: lastItem.createdAt, mediaId: lastItem.mediaId }
+          : (result.LastEvaluatedKey as Record<string, unknown> | undefined);
     } else {
       const result = await docClient.send(
         new QueryCommand({

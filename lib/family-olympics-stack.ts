@@ -296,6 +296,12 @@ export class FamilyOlympicsStack extends cdk.Stack {
       ...bundlingConfig,
     });
 
+    const updateMediaHandler = new nodejs.NodejsFunction(this, 'UpdateMediaHandler', {
+      entry: join(__dirname, 'lambda/media/update.ts'),
+      environment: lambdaEnvironment,
+      ...bundlingConfig,
+    });
+
     const validateGalleryPasswordHandler = new nodejs.NodejsFunction(
       this,
       'ValidateGalleryPasswordHandler',
@@ -354,10 +360,12 @@ export class FamilyOlympicsStack extends cdk.Stack {
     olympicsTable.grantReadData(listMediaHandler);
     olympicsTable.grantReadData(getMediaHandler);
     olympicsTable.grantReadData(deleteMediaHandler);
+    olympicsTable.grantReadData(updateMediaHandler);
 
     mediaTable.grantReadData(listMediaHandler);
     mediaTable.grantReadData(getMediaHandler);
     mediaTable.grantReadWriteData(deleteMediaHandler);
+    mediaTable.grantReadWriteData(updateMediaHandler);
     mediaTable.grantReadWriteData(processMediaHandler);
 
     mediaBucket.grantPut(requestUploadUrlHandler);
@@ -365,6 +373,7 @@ export class FamilyOlympicsStack extends cdk.Stack {
     mediaBucket.grantWrite(processMediaHandler);
     mediaBucket.grantRead(listMediaHandler);
     mediaBucket.grantRead(getMediaHandler);
+    mediaBucket.grantRead(updateMediaHandler);
     mediaBucket.grantReadWrite(deleteMediaHandler);
 
     mediaBucket.addEventNotification(
@@ -449,6 +458,7 @@ export class FamilyOlympicsStack extends cdk.Stack {
 
     const mediaItem = olympicsYearMedia.addResource('{mediaId}');
     mediaItem.addMethod('GET', new apigateway.LambdaIntegration(getMediaHandler));
+    mediaItem.addMethod('PATCH', new apigateway.LambdaIntegration(updateMediaHandler));
     mediaItem.addMethod('DELETE', new apigateway.LambdaIntegration(deleteMediaHandler));
 
     // ============================================

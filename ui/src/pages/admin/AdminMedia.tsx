@@ -21,7 +21,7 @@ import type { MediaItem } from '../../lib/api';
 export const AdminMedia: React.FC = () => {
   const { currentYear, currentOlympics } = useAdmin();
   const galleryAuth = useGalleryAuth(currentYear);
-  const { token, authError, authenticate, isAuthenticated } = galleryAuth;
+  const { token, authError, authenticate, isAuthenticated, logout } = galleryAuth;
 
   // Sync gallery token to API client during render
   apiClient.setGalleryToken(token);
@@ -41,6 +41,9 @@ export const AdminMedia: React.FC = () => {
       if (res.success && res.data) {
         setMedia(res.data.media);
       } else {
+        if (res.error?.code === 'UNAUTHORIZED') {
+          logout();
+        }
         setMediaError(res.error?.message ?? 'Failed to load media');
       }
     } catch (err) {
@@ -48,7 +51,7 @@ export const AdminMedia: React.FC = () => {
     } finally {
       setMediaLoading(false);
     }
-  }, [currentYear]);
+  }, [currentYear, logout]);
 
   // Fetch media when we have a year + are authenticated (or gallery is open)
   useEffect(() => {

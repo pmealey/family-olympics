@@ -112,7 +112,7 @@ export function useEventScores(year: number | null, eventId: string | null) {
 }
 
 // Media hooks
-const DEFAULT_MEDIA_PAGE_SIZE = 48;
+const DEFAULT_MEDIA_PAGE_SIZE = 24;
 
 export function useListMedia(
   year: number | null,
@@ -126,7 +126,7 @@ export function useListMedia(
 
 export function useListMediaPaginated(
   year: number | null,
-  params: { eventId?: string; teamId?: string; person?: string } | undefined,
+  params: { eventId?: string; teamId?: string | string[]; person?: string } | undefined,
   enabled: boolean
 ) {
   const [media, setMedia] = useState<import('../lib/api').MediaItem[]>([]);
